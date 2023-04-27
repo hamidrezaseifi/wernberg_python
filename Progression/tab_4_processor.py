@@ -1,12 +1,12 @@
 from mysq_tyble_base import MySQLTableBase
 
 
-class TableFourTableProcessor(MySQLTableBase):
+class TableFourConnectionProcessor(MySQLTableBase):
 
     _columns = ["id", "serie", "leverage", "betrag"]
 
     def __init__(self):
-        super().__init__()
+        super().__init__("tab_4", self._columns)
 
     def insert(self, row_id: int, leverage: float, betrag: float, serie: str):
         print(f"Adding new row to tab_4")

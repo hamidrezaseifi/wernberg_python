@@ -1,19 +1,18 @@
+
 from mysq_tyble_base import MySQLTableBase
 
 
-class SerireTableProcessor(MySQLTableBase):
+class SerireConnectionProcessor(MySQLTableBase):
 
-    _table_name: str = None
     _columns = ["id", "coin", "einsatz", "`return`", "guv"]
     _last_row = None
 
     def __init__(self, table_name: str):
-        super().__init__()
-        self._table_name = table_name
+        super().__init__(table_name, self._columns)
 
     def load_last_row(self):
         sql = f"SELECT {', '.join(self._columns)} FROM {self._db_database}.{self._table_name} order by id desc limit 1"
-        sql_result = self.read_data(sql)
+        sql_result = self.read_sql_data(sql)
         for row in sql_result:
             self._last_row = {self._columns[idx]: row[idx] for idx in range(0, len(self._columns))}
             #for idx in range(0, len(self._columns)):

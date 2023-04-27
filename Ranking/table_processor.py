@@ -1,7 +1,7 @@
 import time
 
-from mysq_tyble_base import MySQLTableBase
-from tab_1_processor import TableOneProcessor
+from mysq_connection_base import MySQLConnectionBase
+from tab_1_processor import ConnectionOneProcessor
 
 
 class MainTableProcessor:
@@ -10,15 +10,15 @@ class MainTableProcessor:
     _selected_table_name = ""
     _selected_table: MySQLTableReader = None
     _last_serie_index: int = 27
-    _tab_1: TableOneProcessor = None
+    _tab_1: ConnectionOneProcessor = None
     _status: int = 1
 
     def __init__(self):
-        self._tab_1 = TableOneProcessor()
+        self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
     def find_first_valid_table(self) -> bool:
-        table = MySQLTableBase()
+        table = MySQLConnectionBase()
         myresult = table.read_data(
             f"SELECT table_name FROM information_schema.tables "
             f"WHERE table_schema = '{table.get_schema()}' and table_name like 'serie_%'")

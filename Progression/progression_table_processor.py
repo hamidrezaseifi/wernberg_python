@@ -1,29 +1,29 @@
 import time
 
 from mysq_tyble_base import MySQLTableBase
-from serie_table_processor import SerireTableProcessor
+from serie_table_processor import SerireConnectionProcessor
 from process_base import ProcessBase
-from tab_1_processor import TableOneProcessor
-from tab_4_processor import TableFourTableProcessor
+from tab_1_processor import ConnectionOneProcessor
+from tab_4_processor import TableFourConnectionProcessor
 
 
 class ProgressionTableProcessor(ProcessBase):
     _tables = []
     _selected_table_index = -1
     _selected_table_name = ""
-    _selected_table: SerireTableProcessor = None
+    _selected_table: SerireConnectionProcessor = None
     _last_serie_index: int = 27
-    _tab_1: TableOneProcessor = None
+    _tab_1: ConnectionOneProcessor = None
     _status: int = 1
 
     def __init__(self):
         super().__init__()
-        self._tab_1 = TableOneProcessor()
+        self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
     def find_first_valid_table(self) -> bool:
-        table = MySQLTableBase()
-        myresult = table.read_data(
+        table = MySQLTableBase("", [])
+        myresult = table.read_sql_data(
             f"SELECT table_name FROM information_schema.tables "
             f"WHERE table_schema = '{table.get_schema()}' and table_name like 'serie_%'")
 
@@ -33,7 +33,7 @@ class ProgressionTableProcessor(ProcessBase):
 
         for tab_idx in range(0, len(self._tables)):
             self._selected_table_name = self._tables[tab_idx]
-            self._selected_table = SerireTableProcessor(self._selected_table_name)
+            self._selected_table = SerireConnectionProcessor(self._selected_table_name)
             self._selected_table.load_last_row()
             if self._selected_table.is_column_not_null("guv"):
                 self._selected_table_index = tab_idx
@@ -67,14 +67,14 @@ class ProgressionTableProcessor(ProcessBase):
         if not self.find_first_valid_table():
             new_table_name = self.find_new_table_name()
 
-            self._selected_table = SerireTableProcessor(new_table_name)
+            self._selected_table = SerireConnectionProcessor(new_table_name)
             self._selected_table.create_table()
 
         table_name, new_id = self.add_new_row()
         betrag = self._tab_1.get_float_data("5BTR", f"l{new_id}")
         leverage = self._tab_1.get_float_data("5HEB", f"l{new_id}")
 
-        tab_4 = TableFourTableProcessor()
+        tab_4 = TableFourConnectionProcessor()
         tab_4.insert(new_id, leverage, betrag, table_name)
 
 

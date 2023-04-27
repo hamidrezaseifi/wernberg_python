@@ -1,14 +1,14 @@
 import time
 from abc import ABC, abstractmethod
 
-from tab_1_processor import TableOneProcessor
+from tab_1_processor import ConnectionOneProcessor
 
 class ProcessBase(ABC):
     _status: int = 1
-    _tab_1: TableOneProcessor = None
+    _tab_1: ConnectionOneProcessor = None
 
     def __init__(self):
-        self._tab_1 = TableOneProcessor()
+        self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
     def intern_process(self):

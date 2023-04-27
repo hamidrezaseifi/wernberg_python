@@ -4,15 +4,14 @@ from typing import List
 from mysq_tyble_base import MySQLTableBase
 
 
-class TableTwoBTableProcessor(MySQLTableBase):
+class TableTwoBConnectionProcessor(MySQLTableBase):
 
     _columns = ["id", "ls", "move1", "move2", "vol1", "vol2", "last", "ergebnis"]
-    _table_name: str = "tab_2_b"
 
     def __init__(self):
-        super().__init__()
+        super().__init__("tab_2_b", self._columns)
 
-        myresult = self.read_data(
+        myresult = self.read_sql_data(
             f"SELECT table_name FROM information_schema.tables "
             f"WHERE table_schema = '{self.get_schema()}' and table_name = '{self._table_name}'")
         if len(myresult) == 0:

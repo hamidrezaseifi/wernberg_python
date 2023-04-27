@@ -1,5 +1,6 @@
 # This is a sample Python script.
-from Ranking.tab_2b_processor import TableTwoBTableProcessor
+from Ranking.tab_2b_processor import TableTwoBConnectionProcessor
+from tab_1_processor import ConnectionOneProcessor
 
 
 # Press Umschalt+F10 to execute it or replace it with your code.
@@ -14,7 +15,7 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
+    tab_1 = ConnectionOneProcessor()
 
     print_hi('PyCharm')
 

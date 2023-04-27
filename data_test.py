@@ -2,7 +2,7 @@
 import csv
 import os
 
-from mysq_tyble_base import MySQLTableBase
+from mysq_connection_base import MySQLConnectionBase
 
 files = []
 root_path = "E:\\Hamid\\Projects\\python\\wernberg\\test_data"
@@ -11,7 +11,7 @@ for file_name in os.listdir(root_path):
         file_path = os.path.join(root_path, file_name)
         files.append(file_path)
 
-table = MySQLTableBase()
+table = MySQLConnectionBase()
 
 insert_sql = "INSERT INTO test.tab_2(id, ls, move1, move2, vol1, vol2, last) VALUES (%s, %s, %s, %s, %s, %s, %s);"
 

@@ -1,46 +1,42 @@
-import configparser
-import os
-from os.path import dirname
 from typing import List
 
-import mysql.connector
+from mysq_connection_base import MySQLConnectionBase
 
 
-class MySQLTableBase:
+class MySQLTableBase(MySQLConnectionBase):
 
-    _db_database: str = None
-    _db_host: str = None
-    _db_port: str = None
-    _db_user: str = None
-    _db_password: str = None
+    _table_name: str = None
+    _select_columns: List[str] = []
+    _insert_columns: List[str] = []
+    _update_columns: List[str] = []
 
-    def __init__(self):
-        db_conf_file = os.path.join(dirname(__file__), "db.ini")
-        if not os.path.exists(db_conf_file):
-            raise ValueError(f"Database config file '{db_conf_file}' not found!")
-        config = configparser.ConfigParser()
-        config.read(db_conf_file)
-        self._db_host = config['DEFAULT']['host']
-        self._db_port = config['DEFAULT']['port']
-        self._db_user = config['DEFAULT']['user']
-        self._db_password = config['DEFAULT']['password']
-        self._db_database = config['DEFAULT']['database']
+    def __init__(self,
+                 table_name: str,
+                 columns: List[str],
+                 insert_columns: List[str] = None,
+                 update_columns: List[str] = None):
+        super().__init__()
+        self._table_name = table_name
+        self._select_columns = columns
 
-    def _get_connection(self):
-        db_connection = mysql.connector.connect(
-            host=self._db_host,
-            user=self._db_user,
-            password=self._db_password,
-            port=self._db_port,
-            database=self._db_database
-        )
+        self._insert_columns = columns
+        if insert_columns is not None:
+            self._insert_columns = insert_columns
 
-        return db_connection
+        self._update_columns = columns
+        if update_columns is not None:
+            self._update_columns = update_columns
+
 
     def get_connection(self):
         return self._get_connection()
 
-    def read_data(self, sql: str) -> List:
+    def read_table_data(self):
+        select_sql = f"SELECT {', '.join(self._select_columns)} FROM {self._db_database}.{self._table_name}"
+
+        return self.read_sql_data(select_sql)
+
+    def read_sql_data(self, sql: str) -> List:
         db_connection = self._get_connection()
 
         sql_cursor = db_connection.cursor()
@@ -58,9 +54,3 @@ class MySQLTableBase:
         db_connection.close()
 
         return results
-
-    def get_schema(self) -> str:
-        return self._db_database
-
-
-
