@@ -1,5 +1,8 @@
 # This is a sample Python script.
+from Ranking.ranking_table_processor import RankingTableProcessor
+from Ranking.tab_2_processor import TableTwoConnectionProcessor
 from Ranking.tab_2b_processor import TableTwoBConnectionProcessor
+from controller_worker import ControllerWorker
 from tab_1_processor import ConnectionOneProcessor
 
 
@@ -8,15 +11,14 @@ from tab_1_processor import ConnectionOneProcessor
 
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    tab_1 = ConnectionOneProcessor()
 
-    print_hi('PyCharm')
+    main = RankingTableProcessor()
+
+    controller = ControllerWorker(main)
+    controller.start()
+
+    main.start_process()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

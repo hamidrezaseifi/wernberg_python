@@ -22,7 +22,7 @@ class ProgressionTableProcessor(ProcessBase):
         self.check_run_status()
 
     def find_first_valid_table(self) -> bool:
-        table = MySQLTableBase("", [])
+        table = MySQLTableBase("tables", [])
         myresult = table.read_sql_data(
             f"SELECT table_name FROM information_schema.tables "
             f"WHERE table_schema = '{table.get_schema()}' and table_name like 'serie_%'")

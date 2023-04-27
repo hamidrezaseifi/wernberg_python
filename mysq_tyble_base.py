@@ -31,9 +31,12 @@ class MySQLTableBase(MySQLConnectionBase):
     def get_connection(self):
         return self._get_connection()
 
-    def read_table_data(self):
+    def read_table_data(self, sort_by: str = None, limit: int = -1):
         select_sql = f"SELECT {', '.join(self._select_columns)} FROM {self._db_database}.{self._table_name}"
-
+        if sort_by:
+            select_sql += f" order by {sort_by}"
+        if limit > 0:
+            select_sql += f" limit {limit}"
         return self.read_sql_data(select_sql)
 
     def read_sql_data(self, sql: str) -> List:
@@ -47,10 +50,14 @@ class MySQLTableBase(MySQLConnectionBase):
 
         results = []
 
-        for r in sql_result:
-            results.append(r)
+        for sql_row in sql_result:
+            row = [r for r in sql_row]
+            results.append(row)
 
         sql_cursor.close()
         db_connection.close()
 
         return results
+
+    def get_column_index(self, column: str) -> int:
+        return self._select_columns.index(column)
