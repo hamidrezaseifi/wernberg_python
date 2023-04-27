@@ -15,7 +15,7 @@ class TableOneProcessor(MySQLTableBase):
     def load_data(self):
         print(f"Loading data from tab_1")
         read_sql = f"SELECT {', '.join(self._columns)} FROM {self._db_database}.tab_1"
-        sql_result = self.create_statement(read_sql)
+        sql_result = self.read_data(read_sql)
         for row in sql_result:
             id = row[0]
             data_row = {self._columns[idx]: row[idx] for idx in range(0, len(self._columns))}

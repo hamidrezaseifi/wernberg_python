@@ -13,7 +13,7 @@ class SerireTableProcessor(MySQLTableBase):
 
     def load_last_row(self):
         sql = f"SELECT {', '.join(self._columns)} FROM {self._db_database}.{self._table_name} order by id desc limit 1"
-        sql_result = self.create_statement(sql)
+        sql_result = self.read_data(sql)
         for row in sql_result:
             self._last_row = {self._columns[idx]: row[idx] for idx in range(0, len(self._columns))}
             #for idx in range(0, len(self._columns)):

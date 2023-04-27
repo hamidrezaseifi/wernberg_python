@@ -37,7 +37,10 @@ class MySQLTableBase:
 
         return db_connection
 
-    def create_statement(self, sql: str) -> List:
+    def get_connection(self):
+        return self._get_connection()
+
+    def read_data(self, sql: str) -> List:
         db_connection = self._get_connection()
 
         sql_cursor = db_connection.cursor()
