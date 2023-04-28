@@ -5,6 +5,8 @@ from typing import List
 
 import mysql.connector
 
+from config_reader import ConfigurationReader
+
 
 class MySQLConnectionBase:
 
@@ -15,16 +17,13 @@ class MySQLConnectionBase:
     _db_password: str = None
 
     def __init__(self):
-        db_conf_file = os.path.join(dirname(__file__), "db.ini")
-        if not os.path.exists(db_conf_file):
-            raise ValueError(f"Database config file '{db_conf_file}' not found!")
-        config = configparser.ConfigParser()
-        config.read(db_conf_file)
-        self._db_host = config['DEFAULT']['host']
-        self._db_port = config['DEFAULT']['port']
-        self._db_user = config['DEFAULT']['user']
-        self._db_password = config['DEFAULT']['password']
-        self._db_database = config['DEFAULT']['database']
+        config = ConfigurationReader()
+
+        self._db_host = config.db_host
+        self._db_port = config.db_port
+        self._db_user = config.db_user
+        self._db_password = config.db_password
+        self._db_database = config.db_database
 
     def _get_connection(self):
         db_connection = mysql.connector.connect(

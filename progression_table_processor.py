@@ -16,8 +16,8 @@ class ProgressionTableProcessor(ProcessBase):
     _tab_1: ConnectionOneProcessor = None
     _status: int = 1
 
-    def __init__(self):
-        super().__init__(30)
+    def __init__(self, sleep_seconds: int):
+        super().__init__(sleep_seconds)
         self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 

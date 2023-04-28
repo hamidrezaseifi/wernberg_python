@@ -1,8 +1,7 @@
-import time
 from operator import itemgetter
 
-from Ranking.tab_2_processor import TableTwoConnectionProcessor
-from Ranking.tab_3_processor import TableThreeConnectionProcessor
+from tab_2_processor import TableTwoConnectionProcessor
+from tab_3_processor import TableThreeConnectionProcessor
 from process_base import ProcessBase
 from tab_1_processor import ConnectionOneProcessor
 
@@ -26,8 +25,8 @@ class RankingTableProcessor(ProcessBase):
     vol2_index: int = -1
 
 
-    def __init__(self):
-        super().__init__(30)
+    def __init__(self, sleep_seconds: int):
+        super().__init__(sleep_seconds)
 
         self._tab_1 = ConnectionOneProcessor()
         self._tab_2 = TableTwoConnectionProcessor()
