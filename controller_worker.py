@@ -1,8 +1,8 @@
+import logging
 import time
 from threading import Thread
 
 from process_base import ProcessBase
-
 
 class ControllerWorker(Thread):
 
@@ -17,6 +17,6 @@ class ControllerWorker(Thread):
 
     def run(self):
         while True:
-            print("ControllerWorker: checking the run status ...")
+            logging.info("ControllerWorker: checking the run status ...")
             self._table_processor.check_run_status()
             time.sleep(self._sleep_seconds)

@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 from typing import List
 
@@ -18,14 +19,14 @@ class TableTwoBConnectionProcessor(MySQLTableBase):
             self._create_table()
 
     def load_data(self):
-        print(f"Loading data from tab_2")
+        logging.debug(f"Loading data from tab_2")
         db_connection = self._get_connection()
 
 
         db_connection.close()
 
     def insert_data(self, data: List[Dict]):
-        print(f"Loading data into {self.get_schema()}.{self._table_name}")
+        logging.debug(f"Writing data into {self.get_schema()}.{self._table_name}")
 
         insert_sql = f"INSERT INTO {self.get_schema()}.{self._table_name}({','.join(self._columns)}) " \
                      f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"

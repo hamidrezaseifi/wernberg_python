@@ -1,3 +1,4 @@
+import logging
 import time
 from abc import ABC, abstractmethod
 
@@ -21,9 +22,10 @@ class ProcessBase(ABC):
             if self._status == 1:
                 self.intern_process()
             else:
-                print("Status is paused!")
+                logging.info("Status is paused!")
             time.sleep(self._sleep)
 
     def check_run_status(self):
         self._tab_1.load_data()
         self._status = self._tab_1.get_int_data("9POW", "l1")
+

@@ -1,3 +1,5 @@
+import logging
+
 from mysq_tyble_base import MySQLTableBase
 
 
@@ -9,7 +11,7 @@ class TableFourConnectionProcessor(MySQLTableBase):
         super().__init__("tab_4", self._columns)
 
     def insert(self, row_id: int, leverage: float, betrag: float, serie: str):
-        print(f"Adding new row to tab_4")
+        logging.debug(f"Writing new row to tab_4")
         db_connection = self._get_connection()
 
         sql = f"INSERT INTO {self._db_database}.tab_4  ({', '.join(self._columns)}) VALUES (%s, %s, %s, %s) " \

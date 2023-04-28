@@ -1,10 +1,10 @@
-import time
 
 from mysq_tyble_base import MySQLTableBase
 from serie_table_processor import SerireConnectionProcessor
 from process_base import ProcessBase
 from tab_1_processor import ConnectionOneProcessor
 from tab_4_processor import TableFourConnectionProcessor
+import logging
 
 
 class ProgressionTableProcessor(ProcessBase):
@@ -18,6 +18,7 @@ class ProgressionTableProcessor(ProcessBase):
 
     def __init__(self, sleep_seconds: int):
         super().__init__(sleep_seconds)
+        logging.warning('Starting Progression modules.')
         self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
@@ -37,11 +38,9 @@ class ProgressionTableProcessor(ProcessBase):
             self._selected_table.load_last_row()
             if self._selected_table.is_column_not_null("guv"):
                 self._selected_table_index = tab_idx
-                print(f"First valid table is {self._selected_table_name} at index {self._selected_table_index}")
-
                 return True
 
-        print(f"There is no valid table in exiting tables!")
+        logging.info(f"There is no valid table in exiting tables!")
         return False
 
     def add_new_row(self) -> [str, int]:
@@ -62,7 +61,7 @@ class ProgressionTableProcessor(ProcessBase):
         return new_table_name
 
     def intern_process(self):
-        print("Start processing Progressions ...")
+        logging.info("Start processing Progressions ...")
 
         if not self.find_first_valid_table():
             new_table_name = self.find_new_table_name()

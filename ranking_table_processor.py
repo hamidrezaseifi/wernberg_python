@@ -1,3 +1,4 @@
+import logging
 from operator import itemgetter
 
 from tab_2_processor import TableTwoConnectionProcessor
@@ -27,6 +28,7 @@ class RankingTableProcessor(ProcessBase):
 
     def __init__(self, sleep_seconds: int):
         super().__init__(sleep_seconds)
+        logging.info('Starting Ranking modules.')
 
         self._tab_1 = ConnectionOneProcessor()
         self._tab_2 = TableTwoConnectionProcessor()
@@ -42,7 +44,7 @@ class RankingTableProcessor(ProcessBase):
         self.check_run_status()
 
     def process_next_data(self):
-        print("Start processing rankings ...")
+        logging.info("Start processing rankings ...")
 
         cutoff_value, liq_value, min_value_dif, min_value_rat = self.read_base_data()
 
@@ -51,19 +53,15 @@ class RankingTableProcessor(ProcessBase):
 
         #not_proceed_list = not_proceed_list[:10:1]
 
-        #print(not_proceed_list)
-
         if len(not_proceed_list) > 0:
             self._last_proceed_id = not_proceed_list[len(not_proceed_list) - 1][self.id_index]
         else:
-            print("There is no new data to process in tab_3")
+            logging.info("There is no new data to process in tab_3")
             return
 
         # 2. Schritt
 
         not_proceed_list = self.schritt_2(min_value_dif, not_proceed_list)
-
-        #print(not_proceed_list)
 
         # 3. Schritt
 
@@ -106,21 +104,16 @@ class RankingTableProcessor(ProcessBase):
                     else:
                         row.append(0)
 
-            # print(sorted_not_proceed_list)
-
             # 6. Schritt
 
             ergebnis_index = len(sorted_not_proceed_list[0]) - 1
 
             sorted_not_proceed_list = [r for r in sorted_not_proceed_list if r[ergebnis_index] < min_value_rat]
 
-            # print(sorted_not_proceed_list)
-
             # 7. Schritt
 
             sorted_not_proceed_list = sorted(sorted_not_proceed_list, key=itemgetter(ergebnis_index), reverse=True)
 
-            # print(sorted_not_proceed_list)
         return sorted_not_proceed_list
 
     def schritt_4(self, cutoff_value, sorted_not_proceed_list):
@@ -164,9 +157,5 @@ class RankingTableProcessor(ProcessBase):
 
     def intern_process(self):
         self.process_next_data()
-
-    def check_run_status(self):
-        self._tab_1.load_data()
-        self._status = self._tab_1.get_int_data("9POW", "l1")
 
 

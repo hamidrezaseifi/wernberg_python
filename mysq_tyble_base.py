@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict
 
 from mysq_connection_base import MySQLConnectionBase
@@ -65,7 +66,7 @@ class MySQLTableBase(MySQLConnectionBase):
         return self._select_columns.index(column)
 
     def insert_data(self, data: Dict):
-        print(f"Insert data into {self._table_name}")
+        logging.debug(f"Insert data into {self._table_name}")
         db_connection = self._get_connection()
 
         insert_data = [data[c] for c in self._insert_columns]
@@ -79,7 +80,7 @@ class MySQLTableBase(MySQLConnectionBase):
         db_connection.close()
 
     def insert_data_duplicate(self, ins_data: Dict, upd_data: Dict):
-        print(f"Insert data into {self._table_name}")
+        logging.debug(f"Insert or update data into {self._table_name}")
         db_connection = self._get_connection()
 
         insert_data = [ins_data[c] for c in ins_data] + [ins_data[c] for c in upd_data]

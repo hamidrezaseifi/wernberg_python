@@ -1,3 +1,4 @@
+import logging
 
 from mysq_tyble_base import MySQLTableBase
 
@@ -27,7 +28,7 @@ class SerireConnectionProcessor(MySQLTableBase):
         return False
 
     def add_new_row(self) -> int:
-        print(f"Adding new row to {self._table_name}")
+        logging.debug(f"Writing new row to {self._table_name}")
         new_id = 1
         if self._last_row:
             last_id = self._last_row["id"]
@@ -50,7 +51,7 @@ class SerireConnectionProcessor(MySQLTableBase):
         return self._table_name
 
     def create_table(self):
-        print(f"Creating new serie table '{self._table_name}' ...")
+        logging.info(f"Creating new serie table '{self._table_name}' ...")
 
         create_sql = f"CREATE TABLE {self._db_database}.{self._table_name} ( id int(11) PRIMARY KEY, coin varchar(45) DEFAULT NULL, " \
                      "einsatz float DEFAULT NULL, `return` float DEFAULT NULL, guv float DEFAULT NULL)"
