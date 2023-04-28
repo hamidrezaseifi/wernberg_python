@@ -5,9 +5,11 @@ from tab_1_processor import ConnectionOneProcessor
 
 class ProcessBase(ABC):
     _status: int = 1
+    _sleep: int = 1
     _tab_1: ConnectionOneProcessor = None
 
-    def __init__(self):
+    def __init__(self, sleep: int):
+        self._sleep = sleep
         self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
@@ -20,7 +22,7 @@ class ProcessBase(ABC):
                 self.intern_process()
             else:
                 print("Status is paused!")
-            time.sleep(1)
+            time.sleep(self._sleep)
 
     def check_run_status(self):
         self._tab_1.load_data()

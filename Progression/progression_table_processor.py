@@ -17,7 +17,7 @@ class ProgressionTableProcessor(ProcessBase):
     _status: int = 1
 
     def __init__(self):
-        super().__init__()
+        super().__init__(30)
         self._tab_1 = ConnectionOneProcessor()
         self.check_run_status()
 
@@ -62,7 +62,7 @@ class ProgressionTableProcessor(ProcessBase):
         return new_table_name
 
     def intern_process(self):
-        print("Start processing tables ...")
+        print("Start processing Progressions ...")
 
         if not self.find_first_valid_table():
             new_table_name = self.find_new_table_name()

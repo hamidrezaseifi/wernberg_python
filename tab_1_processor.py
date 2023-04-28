@@ -13,7 +13,7 @@ class ConnectionOneProcessor(MySQLTableBase):
         self.load_data()
 
     def load_data(self):
-        print(f"Loading data from tab_1")
+        #print(f"Loading data from tab_1")
         #read_sql = f"SELECT {', '.join(self._columns)} FROM {self._db_database}.tab_1"
         sql_result = self.read_table_data()
         for row in sql_result:
@@ -23,11 +23,11 @@ class ConnectionOneProcessor(MySQLTableBase):
             self._data[id] = data_row
 
     def get_float_data(self, row_id: str, column: str) -> float:
-        print(f"Getting data from tab_1 for id:{row_id} and column:{row_id}")
+        #print(f"Getting data from tab_1 for id:{row_id} and column:{row_id}")
 
         if row_id in self._data:
             if column in self._data[row_id]:
-                print(f"Getting data from tab_1 for id:{row_id} and column:{column} result: {self._data[row_id][column]}")
+                #print(f"Getting data from tab_1 for id:{row_id} and column:{column} result: {self._data[row_id][column]}")
                 return float(self._data[row_id][column])
 
         return -1
