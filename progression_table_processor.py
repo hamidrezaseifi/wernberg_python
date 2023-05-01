@@ -26,7 +26,7 @@ class ProgressionTableProcessor(ProcessBase):
         table = MySQLTableBase("tables", [])
         myresult = table.read_sql_data(
             f"SELECT table_name FROM information_schema.tables "
-            f"WHERE table_schema = '{table.get_schema()}' and table_name like 'serie_%'")
+            f"WHERE table_schema = '{table.get_schema()}' and table_name like 'Serie_%'")
 
         self._tables = [r[0] for r in myresult]
 
@@ -52,12 +52,12 @@ class ProgressionTableProcessor(ProcessBase):
         return None, None
 
     def find_new_table_name(self) -> str:
-        new_table_name = f"serie_{self._last_serie_index:06d}"
-        while new_table_name in self._tables:
+        new_table_name = f"Serie_{self._last_serie_index:06d}"
+        while new_table_name.lower() in [t.lower() for t in self._tables]:
             self._last_serie_index += 1
             if self._last_serie_index > 999999:
                 self._last_serie_index = 1
-            new_table_name = f"serie_{self._last_serie_index:06d}"
+            new_table_name = f"Serie_{self._last_serie_index:06d}"
         return new_table_name
 
     def intern_process(self):

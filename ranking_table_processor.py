@@ -56,7 +56,7 @@ class RankingTableProcessor(ProcessBase):
         if len(not_proceed_list) > 0:
             self._last_proceed_id = not_proceed_list[len(not_proceed_list) - 1][self.id_index]
         else:
-            logging.info("There is no new data to process in tab_3")
+            logging.info("There is no new data to process in Tab_03")
             return
 
         # 2. Schritt
@@ -149,7 +149,7 @@ class RankingTableProcessor(ProcessBase):
 
     def read_base_data(self):
         self._tab_1.load_data()
-        min_value_dif = self._tab_1.get_int_data("3DIF", "l1")
+        min_value_dif = self._tab_1.get_float_data("3DIF", "l1")
         min_value_rat = self._tab_1.get_int_data("2RAT", "l1")
         cutoff_value = self._tab_1.get_int_data("4CUT", "l1")
         liq_value = self._tab_1.get_int_data("6LIQ", "l2")

@@ -9,7 +9,7 @@ class ConnectionOneProcessor(MySQLTableBase):
     _data: dict = {}
 
     def __init__(self):
-        super().__init__("tab_1", self._columns)
+        super().__init__("Tab_01", self._columns)
         self.load_data()
 
     def load_data(self):
@@ -24,7 +24,9 @@ class ConnectionOneProcessor(MySQLTableBase):
 
         if row_id in self._data:
             if column in self._data[row_id]:
-                return float(self._data[row_id][column])
+                if self._data[row_id][column] is None:
+                    return 0
+                return float(str(self._data[row_id][column]).replace(",", "."))
 
         return -1
 

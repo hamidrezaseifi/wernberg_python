@@ -13,7 +13,7 @@ for file_name in os.listdir(root_path):
 
 table = MySQLConnectionBase()
 
-insert_sql = "INSERT INTO test.tab_2(id, ls, move1, move2, vol1, vol2, last) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+insert_sql = "INSERT INTO test.tab_2(id, ls, move1, move2, vol1, vol2, latest) VALUES (%s, %s, %s, %s, %s, %s, %s);"
 
 for file_path in files:
     print()

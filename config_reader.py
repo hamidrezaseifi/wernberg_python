@@ -7,7 +7,7 @@ import logging.config
 from datetime import datetime
 
 class ConfigurationReader:
-    last_date = datetime.now()
+    latest_date = datetime.now()
 
     def __init__(self):
         logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
@@ -40,11 +40,11 @@ class ConfigurationReader:
         log_folder = os.path.join(dirname(__file__), "log")
         if not os.path.exists(log_folder):
             os.mkdir(log_folder)
-        log_folder = os.path.join(log_folder, "{:%Y-%m}".format(ConfigurationReader.last_date))
+        log_folder = os.path.join(log_folder, "{:%Y-%m}".format(ConfigurationReader.latest_date))
         if not os.path.exists(log_folder):
             os.mkdir(log_folder)
 
-        log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.last_date))
+        log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.latest_date))
 
         if len(logger.handlers) < 2:
 
@@ -57,9 +57,9 @@ class ConfigurationReader:
 
             logger.addHandler(file_handler)
         else:
-            if self._extract_log_file_name(ConfigurationReader.last_date) != self._extract_log_file_name(datetime.now()):
-                ConfigurationReader.last_date = datetime.now()
-                log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.last_date))
+            if self._extract_log_file_name(ConfigurationReader.latest_date) != self._extract_log_file_name(datetime.now()):
+                ConfigurationReader.latest_date = datetime.now()
+                log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.latest_date))
                 file_handler = logger.handlers[0]
                 file_handler.baseFilename = log_file
 
