@@ -74,6 +74,6 @@ class ProgressionTableProcessor(ProcessBase):
         leverage = self._tab_1.get_float_data("5HEB", f"l{new_id}")
 
         tab_4 = TableFourConnectionProcessor()
-        tab_4.insert(new_id, leverage, betrag, table_name)
+        tab_4.update(new_id, leverage, betrag, table_name)
 
 

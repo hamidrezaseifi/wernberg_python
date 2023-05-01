@@ -10,9 +10,14 @@ class TableFourConnectionProcessor(MySQLTableBase):
     def __init__(self):
         super().__init__("Tab_04", self._columns)
 
-    def insert(self, row_id: int, leverage: float, betrag: float, serie: str):
+    def update(self, row_id: int, leverage: float, betrag: float, serie: str):
         logging.debug(f"Writing new row to Tab_04")
         db_connection = self._get_connection()
+
+        sql = f"delete from {self._db_database}.{self._table_name}"
+
+        insert_cursor = db_connection.cursor()
+        insert_cursor.execute(sql)
 
         sql = f"INSERT INTO {self._db_database}.{self._table_name}  ({', '.join(self._columns)}) VALUES (%s, %s, %s, %s) " \
               f"ON DUPLICATE KEY UPDATE serie=%s , leverage=%s , betrag=%s"
@@ -20,6 +25,7 @@ class TableFourConnectionProcessor(MySQLTableBase):
 
         insert_cursor = db_connection.cursor()
         insert_cursor.execute(sql, val)
+
 
         db_connection.commit()
         db_connection.close()
