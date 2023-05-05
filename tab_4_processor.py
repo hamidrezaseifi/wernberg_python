@@ -1,6 +1,7 @@
 import logging
 
 from mysq_tyble_base import MySQLTableBase
+from table_loader import TABLE_LOADER
 
 
 class TableFourConnectionProcessor(MySQLTableBase):
@@ -9,6 +10,10 @@ class TableFourConnectionProcessor(MySQLTableBase):
 
     def __init__(self):
         super().__init__("Tab_04", self._columns)
+
+        if self._table_name.lower() not in TABLE_LOADER.get_tables_lower():
+            create_sql = "CREATE TABLE `Tab_04` (`id` int(11) PRIMARY KEY,`serie` varchar(45) COLLATE utf8_unicode_ci NOT NULL, `leverage` int(11) DEFAULT NULL,`betrag` float DEFAULT NULL)"
+            self.execute_sql(create_sql)
 
     def update(self, row_id: int, leverage: float, betrag: float, serie: str):
         logging.debug(f"Writing new row to Tab_04")

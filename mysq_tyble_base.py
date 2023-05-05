@@ -95,3 +95,10 @@ class MySQLTableBase(MySQLConnectionBase):
 
         db_connection.commit()
         db_connection.close()
+
+    def execute_sql(self, sql: str):
+        db_connection = self._get_connection()
+        create_cursor = db_connection.cursor()
+        create_cursor.execute(sql)
+
+        db_connection.close()
