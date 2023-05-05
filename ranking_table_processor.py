@@ -40,6 +40,7 @@ class RankingTableProcessor(ProcessBase):
         self.id_index = self._tab_2.get_column_index("id")
         self.vol1_index = self._tab_2.get_column_index("vol1")
         self.vol2_index = self._tab_2.get_column_index("vol2")
+        self.latest_index = self._tab_2.get_column_index("LATEST")
 
         self.check_run_status()
 
@@ -80,13 +81,14 @@ class RankingTableProcessor(ProcessBase):
 
     def schritt_8_9(self, liq_value, sorted_not_proceed_list):
         first_row = sorted_not_proceed_list[0]
-        vol1 = int(first_row[self.vol1_index])
-        vol2 = int(first_row[self.vol2_index])
-        ls = int(first_row[self.ls_index])
-        bmax = (vol1 + vol2) * ls / liq_value
+        vol1 = first_row[self.vol1_index]
+        vol2 = first_row[self.vol2_index]
+        latest = first_row[self.latest_index]
+        bmax = (vol1 + vol2) * latest / liq_value
         data_to_inset = {"id": first_row[self.id_index], "ls": first_row[self.ls_index], "bmax": bmax}
         data_to_update = {"ls": first_row[self.ls_index], "bmax": bmax}
-        self._tab_3.insert_data_duplicate(data_to_inset, data_to_update)
+        #self._tab_3.insert_data_duplicate(data_to_inset, data_to_update)
+        self._tab_3.update(data_to_inset)
 
     def schritt_5_6_7(self, min_value_rat, sorted_not_proceed_list):
         if min_value_rat is not None and min_value_rat > 0:
@@ -108,7 +110,7 @@ class RankingTableProcessor(ProcessBase):
 
             ergebnis_index = len(sorted_not_proceed_list[0]) - 1
 
-            sorted_not_proceed_list = [r for r in sorted_not_proceed_list if r[ergebnis_index] < min_value_rat]
+            sorted_not_proceed_list = [r for r in sorted_not_proceed_list if r[ergebnis_index] >= min_value_rat]
 
             # 7. Schritt
 
@@ -150,7 +152,7 @@ class RankingTableProcessor(ProcessBase):
     def read_base_data(self):
         self._tab_1.load_data()
         min_value_dif = self._tab_1.get_float_data("3DIF", "l1")
-        min_value_rat = self._tab_1.get_int_data("2RAT", "l1")
+        min_value_rat = self._tab_1.get_int_data("2RAT", "l2")
         cutoff_value = self._tab_1.get_int_data("4CUT", "l1")
         liq_value = self._tab_1.get_int_data("6LIQ", "l2")
         return cutoff_value, liq_value, min_value_dif, min_value_rat

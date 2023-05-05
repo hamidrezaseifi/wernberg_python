@@ -101,4 +101,5 @@ class MySQLTableBase(MySQLConnectionBase):
         create_cursor = db_connection.cursor()
         create_cursor.execute(sql)
 
+        db_connection.commit()
         db_connection.close()

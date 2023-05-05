@@ -12,3 +12,10 @@ class TableThreeConnectionProcessor(MySQLTableBase):
             create_sql = "CREATE TABLE Tab_03 (`id` varchar(45) COLLATE utf8_unicode_ci PRIMARY KEY, `ls` int(4) NOT NULL, `bmax` double DEFAULT NULL)"
             self.execute_sql(create_sql)
 
+    def update(self, data_to_inset: dict):
+        sql = f"delete from {self._db_database}.{self._table_name}"
+        self.execute_sql(sql)
+
+        self.insert_data(data_to_inset)
+
+
