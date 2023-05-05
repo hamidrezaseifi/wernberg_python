@@ -12,6 +12,7 @@ class SerireConnectionProcessor(MySQLTableBase):
         super().__init__(table_name, self._columns)
 
     def load_last_row(self):
+        logging.info(f"loading last row from {self._table_name}")
         sql = f"SELECT {', '.join(self._columns)} FROM {self._db_database}.{self._table_name} order by id desc limit 1"
         sql_result = self.read_sql_data(sql)
         for row in sql_result:

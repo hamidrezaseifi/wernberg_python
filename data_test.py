@@ -19,6 +19,7 @@ files = ["E:\\Hamid\\Projects\\python\\wernberg\\test_data\\Mappe1.CSV"]
 insert_sql = "INSERT INTO test.tab_2(id, ls, move1, move2, vol1, vol2, latest) VALUES (%s, %s, %s, %s, %s, %s, %s);"
 columns = ["id", "ls", "move1", "move2", "vol1", "vol2", "LATEST"]
 
+
 for file_path in files:
     print()
     print("--------------------------------------------------------------------------------------------")
