@@ -49,6 +49,10 @@ class RankingTableProcessor(ProcessBase):
 
         cutoff_value, liq_value, min_value_dif, min_value_rat = self.read_base_data()
 
+        if liq_value == 0:
+            logging.info("There is 0 value in 6LIQ : L2!")
+            return
+
         # 1. Schritt
         not_proceed_list = self.schritt_1()
 
@@ -148,10 +152,10 @@ class RankingTableProcessor(ProcessBase):
         #print()
 
         not_proceed_list = [r for r in not_proceed_list if r[self.move1_index] is not None and r[self.move2_index] is not None]
-        not_proceed_list = [r for r in not_proceed_list if int(r[self.move1_index]) > 0]
-        # not_proceed_list = [r for r in not_proceed_list if int(r[self.move2_index]) > 0]
+        not_proceed_list = [r for r in not_proceed_list if float(r[self.move1_index]) > 0]
+        # not_proceed_list = [r for r in not_proceed_list if float(r[self.move2_index]) > 0]
         not_proceed_list = [r for r in not_proceed_list if
-                            int(r[self.move1_index]) - int(r[self.move2_index]) > min_value_dif]
+                            float(r[self.move1_index]) - float(r[self.move2_index]) > min_value_dif]
         return not_proceed_list
 
     def schritt_1(self):
