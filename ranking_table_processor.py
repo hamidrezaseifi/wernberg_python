@@ -177,7 +177,7 @@ class RankingTableProcessor(ProcessBase):
         min_value_dif = self._tab_1.get_float_data("3DIF", "l1")
         min_value_rat = self._tab_1.get_int_data("2RAT", "l2")
         cutoff_value = self._tab_1.get_int_data("4CUT", "l1")
-        liq_value = self._tab_1.get_int_data("6LIQ", "l2")
+        liq_value = self._tab_1.get_int_data("6LIQ", "l1")
         return cutoff_value, liq_value, min_value_dif, min_value_rat
 
     def intern_process(self):
