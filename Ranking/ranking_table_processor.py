@@ -106,6 +106,7 @@ class RankingTableProcessor(ProcessBase):
         data_to_inset = {"id": first_row[self.id_index], "ls": first_row[self.ls_index], "bmax": bmax}
         data_to_update = {"ls": first_row[self.ls_index], "bmax": bmax}
         #self._tab_3.insert_data_duplicate(data_to_inset, data_to_update)
+        logging.info(f"Update tab_3: {data_to_inset}")
         self._tab_3.update(data_to_inset)
 
     def schritt_5_6_7(self, min_value_rat, in_sorted_not_proceed_list):
@@ -116,13 +117,16 @@ class RankingTableProcessor(ProcessBase):
                 vol1 = float(row[self.vol1_index])
                 vol2 = float(row[self.vol2_index])
                 ls = int(row[self.ls_index])
-                if ls == 1:
-                    row.append(vol1 / vol2)
+                if vol1 == 0 or vol2 == 0:
+                    row.append(0)
                 else:
-                    if ls == 2:
-                        row.append(vol2 / vol1)
+                    if ls == 1:
+                        row.append(vol1 / vol2)
                     else:
-                        row.append(0)
+                        if ls == 2:
+                            row.append(vol2 / vol1)
+                        else:
+                            row.append(0)
 
             # 6. Schritt
 
@@ -151,9 +155,15 @@ class RankingTableProcessor(ProcessBase):
         #print(not_proceed_list)
         #print()
 
-        not_proceed_list = [r for r in not_proceed_list if r[self.move1_index] is not None and r[self.move2_index] is not None]
-        not_proceed_list = [r for r in not_proceed_list if float(r[self.move1_index]) > 0]
+        #not_proceed_list = [r for r in not_proceed_list if r[self.move1_index] is not None and r[self.move2_index] is not None]
+        #not_proceed_list = [r for r in not_proceed_list if float(r[self.move1_index]) > 0]
         # not_proceed_list = [r for r in not_proceed_list if float(r[self.move2_index]) > 0]
+
+        for r in range(0, len(not_proceed_list)):
+            for c in range(2, len(not_proceed_list[r])):
+                if not_proceed_list[r][c] is None:
+                    not_proceed_list[r][c] = 0
+
         not_proceed_list = [r for r in not_proceed_list if
                             float(r[self.move1_index]) - float(r[self.move2_index]) > min_value_dif]
         return not_proceed_list
