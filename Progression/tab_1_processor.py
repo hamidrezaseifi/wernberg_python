@@ -26,10 +26,16 @@ class ConnectionOneProcessor(MySQLTableBase):
             if column in self._data[row_id]:
                 if self._data[row_id][column] is None:
                     return 0
-                return float(str(self._data[row_id][column]).replace(",", "."))
+                return ConnectionOneProcessor.get_proper_float(self._data[row_id][column])
 
         return -1
 
     def get_int_data(self, row_id: str, column: str) -> int:
         return int(self.get_float_data(row_id, column))
+
+    @staticmethod
+    def get_proper_float(in_str: str) -> float:
+        if in_str is None or str(in_str).strip() == "":
+            return 0
+        return float(str(in_str).replace(",", "."))
 

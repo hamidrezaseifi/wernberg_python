@@ -66,7 +66,8 @@ class RankingTableProcessor(ProcessBase):
 
         # 2. Schritt
 
-        not_proceed_list = self.schritt_2(min_value_dif, not_proceed_list)
+        if min_value_dif > 0:
+            not_proceed_list = self.schritt_2(min_value_dif, not_proceed_list)
 
         if len(not_proceed_list) == 0:
             logging.info("Results of step 2 is empty!")
@@ -159,11 +160,6 @@ class RankingTableProcessor(ProcessBase):
         #not_proceed_list = [r for r in not_proceed_list if float(r[self.move1_index]) > 0]
         # not_proceed_list = [r for r in not_proceed_list if float(r[self.move2_index]) > 0]
 
-        for r in range(0, len(not_proceed_list)):
-            for c in range(2, len(not_proceed_list[r])):
-                if not_proceed_list[r][c] is None:
-                    not_proceed_list[r][c] = 0
-
         not_proceed_list = [r for r in not_proceed_list if
                             float(r[self.move1_index]) - float(r[self.move2_index]) > min_value_dif]
         return not_proceed_list
@@ -180,6 +176,12 @@ class RankingTableProcessor(ProcessBase):
                     continue
                 if start_to_select:
                     not_proceed_list.append(row_list[i])
+
+        for r in range(0, len(not_proceed_list)):
+            for c in range(2, len(not_proceed_list[r])):
+                if not_proceed_list[r][c] is None:
+                    not_proceed_list[r][c] = 0
+
         return not_proceed_list
 
     def read_base_data(self):

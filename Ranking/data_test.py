@@ -6,6 +6,12 @@ from mysq_connection_base import MySQLConnectionBase
 from mysq_tyble_base import MySQLTableBase
 from tab_2_processor import TableTwoConnectionProcessor
 
+def get_float(val: str)-> float:
+    if str(val).lower() == "null":
+        return None
+    return float(val.replace(",", "."))
+
+
 files = []
 root_path = "E:\\Hamid\\Projects\\python\\wernberg\\test_data"
 for file_name in os.listdir(root_path):
@@ -35,7 +41,7 @@ for file_path in files:
                 continue
 
 
-            data_row = [float(r.replace(",", ".")) if i > 0 else r for i,r in enumerate(row)]
+            data_row = [get_float(r) if i > 1 else r for i,r in enumerate(row)]
             data_row_dic = {}
             for i in range(0, len(columns)):
                 data_row_dic[columns[i]] = data_row[i]
