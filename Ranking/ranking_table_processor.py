@@ -1,5 +1,6 @@
 import logging
 from operator import itemgetter
+from typing import List
 
 from tab_2_processor import TableTwoConnectionProcessor
 from tab_3_processor import TableThreeConnectionProcessor
@@ -9,13 +10,11 @@ from tab_1_processor import ConnectionOneProcessor
 
 class RankingTableProcessor(ProcessBase):
     _tables = []
-    _selected_table_index = -1
-    _selected_table_name = ""
     _tab_2: TableTwoConnectionProcessor = None
     _last_serie_index: int = 27
     _tab_1: ConnectionOneProcessor = None
     _status: int = 1
-    _last_proceed_id: str = None
+    _last_proceed_rows: List[str] = []
     _tab_3: TableThreeConnectionProcessor = None
 
     move1_index: int = -1
@@ -58,10 +57,8 @@ class RankingTableProcessor(ProcessBase):
 
         #not_proceed_list = not_proceed_list[:10:1]
 
-        if len(not_proceed_list) > 0:
-            self._last_proceed_id = not_proceed_list[len(not_proceed_list) - 1][self.id_index]
-        else:
-            logging.info("There is no new data to process in Tab_03")
+        if len(not_proceed_list) == 0:
+            logging.info("There is no new data to process in Tab_02")
             return
 
         # 2. Schritt
@@ -166,16 +163,20 @@ class RankingTableProcessor(ProcessBase):
 
     def schritt_1(self):
         row_list = self._tab_2.read_table_data()
-        not_proceed_list = row_list
-        if self._last_proceed_id:
-            not_proceed_list = []
-            start_to_select = False
-            for i in range(0, len(row_list)):
-                if row_list[i][self.id_index] == self._last_proceed_id:
-                    start_to_select = True
-                    continue
-                if start_to_select:
-                    not_proceed_list.append(row_list[i])
+        not_proceed_list = []
+        new_id_list = []
+
+        for r in row_list:
+            id = self._get_identity_vale(r)
+            if id not in self._last_proceed_rows:
+                not_proceed_list.append(r)
+                new_id_list.append(id)
+
+        #not_proceed_list = [r for r in not_proceed_list if r[len(r)-1] not in self._last_proceed_rows]
+
+        if len(new_id_list) > 0:
+            self._last_proceed_rows = new_id_list
+            logging.info(f'There {len(new_id_list)} new data in Tab_02')
 
         for r in range(0, len(not_proceed_list)):
             for c in range(2, len(not_proceed_list[r])):
@@ -194,5 +195,17 @@ class RankingTableProcessor(ProcessBase):
 
     def intern_process(self):
         self.process_next_data()
+
+    @staticmethod
+    def _get_identity_vale(row: List):
+        id = ""
+        for val in row:
+            id += str(val) + ":"
+
+        if id.endswith(":"):
+            id = id[:len(id)-1]
+
+        return id
+
 
 

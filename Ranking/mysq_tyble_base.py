@@ -42,7 +42,7 @@ class MySQLTableBase(MySQLConnectionBase):
             select_sql += f" limit {limit}"
         return self.read_sql_data(select_sql)
 
-    def read_sql_data(self, sql: str) -> List:
+    def read_sql_data(self, sql: str) -> List[List]:
         db_connection = self._get_connection()
 
         sql_cursor = db_connection.cursor()
