@@ -78,6 +78,8 @@ class RankingTableProcessor(ProcessBase):
             logging.info("Results of step 3 is empty!")
             return
 
+        logging.info(f"After Schritt.3 the first row is: {sorted_not_proceed_list[0]}")
+
         # 4. Schritt
 
         sorted_not_proceed_list = self.schritt_4(cutoff_value, sorted_not_proceed_list)
@@ -97,6 +99,7 @@ class RankingTableProcessor(ProcessBase):
 
     def schritt_8_9(self, liq_value, sorted_not_proceed_list):
         first_row = sorted_not_proceed_list[0]
+        logging.info(f"first_row is: {first_row}")
         vol1 = first_row[self.vol1_index]
         vol2 = first_row[self.vol2_index]
         latest = first_row[self.latest_index]
