@@ -34,9 +34,10 @@ class ProgressionTableProcessor(ProcessBase):
 
         for tab_idx in range(0, len(tables)):
             self._selected_table_name = tables[tab_idx]
-            self._selected_table = SerireConnectionProcessor(self._selected_table_name)
-            self._selected_table.load_last_row()
-            if self._selected_table.is_column_not_null("guv"):
+            serie_table = SerireConnectionProcessor(self._selected_table_name)
+            serie_table.load_last_row()
+            if serie_table.is_column_not_null("guv"):
+                self._selected_table = serie_table
                 self._selected_table_index = tab_idx
                 return True
 

@@ -1,10 +1,11 @@
 import configparser
 import os
-import sys
+from logging.handlers import TimedRotatingFileHandler
 from os.path import dirname
 import logging
 import logging.config
 from datetime import datetime
+
 
 class ConfigurationReader:
     latest_date = datetime.now()
@@ -37,32 +38,7 @@ class ConfigurationReader:
 
         logger = logging.getLogger()
 
-        log_folder = os.path.join(dirname(__file__), "log")
-        if not os.path.exists(log_folder):
-            os.mkdir(log_folder)
-        log_folder = os.path.join(log_folder, "{:%Y-%m}".format(ConfigurationReader.latest_date))
-        if not os.path.exists(log_folder):
-            os.mkdir(log_folder)
+        logger.setLevel(logging.INFO)
 
-        log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.latest_date))
 
-        if len(logger.handlers) < 2:
-
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s (%(levelname)-s) %(filename)s fn:%(funcName)s line(%(lineno)d) | %(message)s', datefmt="%Y/%m-%d %H:%M:%S")
-
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(logging.INFO)
-            file_handler.setFormatter(formatter)
-
-            logger.addHandler(file_handler)
-        else:
-            if self._extract_log_file_name(ConfigurationReader.latest_date) != self._extract_log_file_name(datetime.now()):
-                ConfigurationReader.latest_date = datetime.now()
-                log_file = os.path.join(log_folder, self._extract_log_file_name(ConfigurationReader.latest_date))
-                file_handler = logger.handlers[0]
-                file_handler.baseFilename = log_file
-
-    @staticmethod
-    def _extract_log_file_name(dt: datetime):
-        return "{:%Y-%m-%d}.log".format(dt)
+CONFIG_READER = ConfigurationReader()

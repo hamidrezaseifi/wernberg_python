@@ -1,11 +1,7 @@
-import configparser
-import os
-from os.path import dirname
-from typing import List
 
 import mysql.connector
 
-from config_reader import ConfigurationReader
+from config_reader import CONFIG_READER
 
 
 class MySQLConnectionBase:
@@ -17,13 +13,12 @@ class MySQLConnectionBase:
     _db_password: str = None
 
     def __init__(self):
-        config = ConfigurationReader()
 
-        self._db_host = config.db_host
-        self._db_port = config.db_port
-        self._db_user = config.db_user
-        self._db_password = config.db_password
-        self._db_database = config.db_database
+        self._db_host = CONFIG_READER.db_host
+        self._db_port = CONFIG_READER.db_port
+        self._db_user = CONFIG_READER.db_user
+        self._db_password = CONFIG_READER.db_password
+        self._db_database = CONFIG_READER.db_database
 
     def _get_connection(self):
         db_connection = mysql.connector.connect(
