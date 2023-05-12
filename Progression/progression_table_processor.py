@@ -1,9 +1,10 @@
 import time
+from datetime import datetime
 from typing import List
 
 from config_reader import ConfigurationReader
 
-from mysql.connector import connect, Error
+from mysql.connector import Error, pooling
 
 
 class ProgressionTableProcessor:
@@ -24,10 +25,7 @@ class ProgressionTableProcessor:
         config = ConfigurationReader()
         self._sleep = config.get_sleep()
 
-        self._db_host = config.db_host
-        self._db_port = config.db_port
-        self._db_user = config.db_user
-        self._db_password = config.db_password
+        self.connection_pool = self.get_connection_pool(config)
         self._db_database = config.db_database
 
     def load_last_row(self, table_name: str):
@@ -93,7 +91,7 @@ class ProgressionTableProcessor:
         return new_table_name
 
     def intern_process(self):
-        print("Start processing Progressions ...")
+        self.print_log("Start processing Progressions ...")
 
         if not self.find_first_valid_table():
             self._selected_table_name = self.find_new_table_name()
@@ -150,7 +148,7 @@ class ProgressionTableProcessor:
         return new_id
 
     def create_serie_table(self, table_name):
-        print(f"Creating new serie table '{table_name}' ...")
+        self.print_log(f"Creating new serie table '{table_name}' ...")
 
         create_sql = f"CREATE TABLE {self._db_database}.{table_name} ( id int(11) PRIMARY KEY, coin varchar(45) DEFAULT NULL, " \
                      "einsatz float DEFAULT NULL, `return` float DEFAULT NULL, guv float DEFAULT NULL)"
@@ -183,24 +181,9 @@ class ProgressionTableProcessor:
 
         self.serie_tables = [t for t in self.tables if t.lower().startswith("serie_")]
 
-    def _get_connection(self):
-        try:
-            db_connection = connect(
-                host=self._db_host,
-                user=self._db_user,
-                password=self._db_password,
-                port=self._db_port,
-                database=self._db_database
-            )
-
-            return db_connection
-
-        except Error as e:
-            print("Error in _get_connection: " + str(e))
-
     def start_process(self):
         while True:
-            self.connection = self._get_connection()
+            self.connection = self.connection_pool.get_connection()
             
             self._check_run_status()
             if self._status == 1:
@@ -248,5 +231,23 @@ class ProgressionTableProcessor:
         if in_str is None or str(in_str).strip() == "":
             return 0
         return float(str(in_str).replace(",", "."))
+
+    def get_connection_pool(self, config):
+        try:
+            connection_pool = pooling.MySQLConnectionPool(pool_name="pynative_pool",
+                                                          pool_size=3,
+                                                          pool_reset_session=True,
+                                                          host=config.db_host,
+                                                          port=config.db_port,
+                                                          database=config.db_database,
+                                                          user=config.db_user,
+                                                          password=config.db_password)
+
+            return connection_pool
+        except Error as e:
+            self.print_log("Error in get_connection_pool: " + str(e))
+
+    def print_log(self, msg):
+        print(datetime.now().strftime("%Y-%m-%d %I:%M:%S") + ": " + msg)
 
 

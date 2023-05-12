@@ -1,3 +1,4 @@
+from datetime import datetime
 from operator import itemgetter
 
 import time
@@ -5,7 +6,7 @@ from typing import List
 
 from config_reader import ConfigurationReader
 
-from mysql.connector import connect, Error
+from mysql.connector import Error, pooling
 
 
 class RankingTableProcessor:
@@ -40,26 +41,24 @@ class RankingTableProcessor:
         config = ConfigurationReader()
         self._sleep = config.get_sleep()
 
-        self._db_host = config.db_host
-        self._db_port = config.db_port
-        self._db_user = config.db_user
-        self._db_password = config.db_password
+        self.connection_pool = self.get_connection_pool(config)
+
         self._db_database = config.db_database
 
     def process_next_data(self):
-        print("Start processing rankings ...")
+        self.print_log("Start processing rankings ...")
 
         cutoff_value, liq_value, min_value_dif, min_value_rat = self.read_base_data()
 
         if liq_value == 0:
-            print("There is 0 value in 6LIQ : L2!")
+            self.print_log("There is 0 value in 6LIQ : L2!")
             return
 
         # 1. Schritt
         not_proceed_list = self.schritt_1()
 
         if len(not_proceed_list) == 0:
-            print("There is no new data to process in Tab_02")
+            self.print_log("There is no new data to process in Tab_02")
             return
 
         # 2. Schritt
@@ -68,7 +67,7 @@ class RankingTableProcessor:
             not_proceed_list = self.schritt_2(min_value_dif, not_proceed_list)
 
         if len(not_proceed_list) == 0:
-            print("Results of step 2 is empty!")
+            self.print_log("Results of step 2 is empty!")
             return
 
         # 3. Schritt
@@ -76,7 +75,7 @@ class RankingTableProcessor:
         sorted_not_proceed_list = self.schritt_3(not_proceed_list)
 
         if len(sorted_not_proceed_list) == 0:
-            print("Results of step 3 is empty!")
+            self.print_log("Results of step 3 is empty!")
             return
 
         # 4. Schritt
@@ -84,7 +83,7 @@ class RankingTableProcessor:
         sorted_not_proceed_list = self.schritt_4(cutoff_value, sorted_not_proceed_list)
 
         if len(sorted_not_proceed_list) == 0:
-            print("Results of step 4 is empty!")
+            self.print_log("Results of step 4 is empty!")
             return
 
         sorted_not_proceed_list = self.schritt_5_6_7(min_value_rat, sorted_not_proceed_list)
@@ -94,7 +93,7 @@ class RankingTableProcessor:
             # 9. Schritt
             self.schritt_8_9(liq_value, sorted_not_proceed_list)
         else:
-            print("Results of steps 5_6_7 is empty!")
+            self.print_log("Results of steps 5_6_7 is empty!")
 
     def schritt_8_9(self, liq_value, sorted_not_proceed_list):
         first_row = sorted_not_proceed_list[0]
@@ -103,7 +102,7 @@ class RankingTableProcessor:
         latest = first_row[self.latest_index]
         bmax = (vol1 + vol2) * latest / liq_value
         data_to_inset = {"id": first_row[self.id_index], "ls": first_row[self.ls_index], "bmax": bmax}
-        print(f"Update tab_3: {data_to_inset}")
+        self.print_log(f"Update tab_3: {data_to_inset}")
         self.update_tab_3(first_row[self.id_index], first_row[self.ls_index], bmax)
 
     def schritt_5_6_7(self, min_value_rat, in_sorted_not_proceed_list):
@@ -189,7 +188,7 @@ class RankingTableProcessor:
             self.process_next_data()
 
         except:
-            print("Error in intern_process: ")
+            self.print_log("Error in intern_process: ")
 
     @staticmethod
     def _get_identity_vale(row: List):
@@ -235,24 +234,9 @@ class RankingTableProcessor:
             return 0
         return float(str(in_str).replace(",", "."))
 
-    def _get_connection(self):
-        try:
-            db_connection = connect(
-                host=self._db_host,
-                user=self._db_user,
-                password=self._db_password,
-                port=self._db_port,
-                database=self._db_database
-            )
-
-            return db_connection
-
-        except Error as e:
-            print("Error in _get_connection: " + str(e))
-
     def start_process(self):
         while True:
-            self.connection = self._get_connection()
+            self.connection = self.connection_pool.get_connection()
 
             self._check_run_status()
             if self._status == 1:
@@ -269,7 +253,7 @@ class RankingTableProcessor:
             self._status = int(values["9POW"][0])
 
         except:
-            print("Error in _check_run_status: ")
+            self.print_log("Error in _check_run_status: ")
 
     def get_tab_2_column_index(self, column):
         return self._tab2_columns.index(column)
@@ -305,3 +289,21 @@ class RankingTableProcessor:
 
         self.connection.commit()
         sql_cursor.close()
+
+    def get_connection_pool(self, config):
+        try:
+            connection_pool = pooling.MySQLConnectionPool(pool_name="pynative_pool",
+                                                          pool_size=3,
+                                                          pool_reset_session=True,
+                                                          host=config.db_host,
+                                                          port=config.db_port,
+                                                          database=config.db_database,
+                                                          user=config.db_user,
+                                                          password=config.db_password)
+
+            return connection_pool
+        except Error as e:
+            self.print_log("Error in get_connection_pool: " + str(e))
+
+    def print_log(self, msg):
+        print(datetime.now().strftime("%Y-%m-%d %I:%M:%S") + ": " + msg)
