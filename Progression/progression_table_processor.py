@@ -108,8 +108,8 @@ class ProgressionTableProcessor:
 
         values = self._read_tab1_value([f"l{new_id}"], ["5BTR", "5HEB"])
 
-        betrag = self.get_proper_float(values["5BTR"][0]) #_tab_1.get_float_data("5BTR", f"l{new_id}")
-        leverage = self.get_proper_float(values["5HEB"][0]) #_tab_1.get_float_data("5HEB", f"l{new_id}")
+        betrag = self.get_proper_float(values["5BTR"][0])
+        leverage = self.get_proper_float(values["5HEB"][0])
 
         self._update_tab_4(new_id, leverage, betrag, self._selected_table_name)
 
