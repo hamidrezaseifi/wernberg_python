@@ -197,6 +197,7 @@ class ProgressionTableProcessor:
 
         except Error as e:
             print("Error in _get_connection: " + str(e))
+
     def start_process(self):
         while True:
             self.connection = self._get_connection()
