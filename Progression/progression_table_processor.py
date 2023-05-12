@@ -20,12 +20,12 @@ class ProgressionTableProcessor(ProcessBase):
     _status: int = 1
 
 
-    def __init__(self, sleep_seconds: int):
-        super().__init__(sleep_seconds)
+    def __init__(self):
+        super().__init__()
         logging.warning('Starting Progression modules.')
         self._tab_1 = ConnectionOneProcessor()
         self._tab_4 = TableFourConnectionProcessor()
-        self.check_run_status()
+        self._check_run_status()
 
     def find_first_valid_table(self) -> bool:
         TABLE_LOADER.load_tables()

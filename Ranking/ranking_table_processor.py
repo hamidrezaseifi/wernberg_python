@@ -25,8 +25,8 @@ class RankingTableProcessor(ProcessBase):
     vol2_index: int = -1
 
 
-    def __init__(self, sleep_seconds: int):
-        super().__init__(sleep_seconds)
+    def __init__(self):
+        super().__init__()
         logging.info('Starting Ranking modules.')
 
         self._tab_1 = ConnectionOneProcessor()
@@ -40,8 +40,6 @@ class RankingTableProcessor(ProcessBase):
         self.vol1_index = self._tab_2.get_column_index("vol1")
         self.vol2_index = self._tab_2.get_column_index("vol2")
         self.latest_index = self._tab_2.get_column_index("LATEST")
-
-        self.check_run_status()
 
     def process_next_data(self):
         logging.info("Start processing rankings ...")

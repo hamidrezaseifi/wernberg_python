@@ -1,6 +1,5 @@
 import configparser
 import os
-from logging.handlers import TimedRotatingFileHandler
 from os.path import dirname
 import logging
 import logging.config
@@ -30,9 +29,10 @@ class ConfigurationReader:
         self.db_password = config['DATABASE']['password']
         self.db_database = config['DATABASE']['database']
 
-        self.progression_sleep = int(config['PROGRESSION']['sleep'])
+        self._sleep = int(config['PROGRESSION']['sleep'])
 
-        self.ranking_sleep = int(config['RANKING']['sleep'])
+    def get_sleep(self) -> float:
+        return self._sleep / 1000
 
     def _config_logger(self):
 
