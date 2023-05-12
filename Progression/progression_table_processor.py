@@ -1,12 +1,12 @@
+import time
 from typing import List
 
-from process_base import ProcessBase
+from config_reader import ConfigurationReader
 
-#from table_loader import TABLE_LOADER
+from mysql.connector import connect, Error
 
 
-
-class ProgressionTableProcessor(ProcessBase):
+class ProgressionTableProcessor:
 
     _selected_table_name = ""
     _last_serie_index: int = 27
@@ -17,15 +17,24 @@ class ProgressionTableProcessor(ProcessBase):
 
 
     def __init__(self):
-        super().__init__()
+        self.connection = None
         self.tables = []
         self.serie_tables = []
         self._table_4_name = "Tab_04"
 
-    def load_last_row(self, table_name: str, db_connection):
+        config = ConfigurationReader()
+        self._sleep = config.get_sleep()
+
+        self._db_host = config.db_host
+        self._db_port = config.db_port
+        self._db_user = config.db_user
+        self._db_password = config.db_password
+        self._db_database = config.db_database
+
+    def load_last_row(self, table_name: str):
         sql = f"SELECT {', '.join(self._serie_columns)} FROM {self._db_database}.{table_name} order by id desc limit 1"
 
-        sql_cursor = db_connection.cursor()
+        sql_cursor = self.connection.cursor()
 
         sql_cursor.execute(sql)
 
@@ -34,6 +43,8 @@ class ProgressionTableProcessor(ProcessBase):
         last_row = None
         for sql_row in sql_result:
             last_row = [r for r in sql_row]
+
+        sql_cursor.close()
 
         return last_row
 
@@ -46,32 +57,24 @@ class ProgressionTableProcessor(ProcessBase):
         return False
 
     def find_first_valid_table(self) -> bool:
-        #TABLE_LOADER.load_tables()
 
-        #tables = TABLE_LOADER.get_serie_tables()
-
-        db_connection = self._get_connection()
-
-        self.load_tables(db_connection)
+        self.load_tables()
 
         self._selected_table_name = None
         for tab_idx in range(0, len(self.serie_tables)):
             selected_table_name = self.serie_tables[tab_idx]
 
-            last_row = self.load_last_row(selected_table_name, db_connection)
+            last_row = self.load_last_row(selected_table_name)
 
             if self.is_column_not_null("guv", last_row):
                 self._selected_table_name = selected_table_name
-
-                db_connection.close()
                 return True
 
-        db_connection.close()
         return False
 
     def add_new_row(self) -> [str, int]:
         if self._selected_table_name is not None:
-            #serie_table = SerireConnectionProcessor(self._selected_table_name)
+
             new_id = self.add_new_serire_row(self._selected_table_name)
             return new_id
 
@@ -112,28 +115,25 @@ class ProgressionTableProcessor(ProcessBase):
         self._update_tab_4(new_id, leverage, betrag, self._selected_table_name)
 
     def _update_tab_4(self, row_id, leverage, betrag, serie):
-        db_connection = self._get_connection()
-
         sql = f"delete from {self._db_database}.{self._table_4_name}"
 
-        insert_cursor = db_connection.cursor()
+        insert_cursor = self.connection.cursor()
         insert_cursor.execute(sql)
 
         sql = f"INSERT INTO {self._db_database}.{self._table_4_name}  ({', '.join(self._tab_4_columns)}) VALUES (%s, %s, %s, %s) "
 
         val = (row_id, serie, leverage, betrag)
 
-        insert_cursor = db_connection.cursor()
         insert_cursor.execute(sql, val)
 
-        db_connection.commit()
-        db_connection.close()
+        insert_cursor.close()
+
+        self.connection.commit()
 
     def add_new_serire_row(self, table_name):
-        db_connection = self._get_connection()
 
         new_id = 1
-        last_row = self.load_last_row(table_name, db_connection)
+        last_row = self.load_last_row(table_name)
         if last_row is not None and len(last_row) > 0:
             last_id = int(last_row[0])
             new_id = last_id + 1
@@ -141,11 +141,12 @@ class ProgressionTableProcessor(ProcessBase):
         sql = f"INSERT INTO {self._db_database}.{table_name}  ({', '.join(self._serie_columns)}) VALUES (%s, %s, %s, %s, %s)"
         val = (new_id, None, None, None, None)
 
-        insert_cursor = db_connection.cursor()
+        insert_cursor = self.connection.cursor()
         insert_cursor.execute(sql, val)
 
-        db_connection.commit()
-        db_connection.close()
+        insert_cursor.close()
+
+        self.connection.commit()
 
         return new_id
 
@@ -155,17 +156,17 @@ class ProgressionTableProcessor(ProcessBase):
         create_sql = f"CREATE TABLE {self._db_database}.{table_name} ( id int(11) PRIMARY KEY, coin varchar(45) DEFAULT NULL, " \
                      "einsatz float DEFAULT NULL, `return` float DEFAULT NULL, guv float DEFAULT NULL)"
 
-        db_connection = self._get_connection()
-        create_cursor = db_connection.cursor()
+        create_cursor = self.connection.cursor()
         create_cursor.execute(create_sql)
 
-        db_connection.commit()
-        db_connection.close()
+        create_cursor.close()
 
-    def load_tables(self, db_connection):
+        self.connection.commit()
+
+    def load_tables(self):
         sql = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{self._db_database}'"
 
-        sql_cursor = db_connection.cursor()
+        sql_cursor = self.connection.cursor()
 
         sql_cursor.execute(sql)
 
@@ -177,8 +178,81 @@ class ProgressionTableProcessor(ProcessBase):
             row = [r for r in sql_row]
             self.tables.append(row[0])
 
+        sql_cursor.close()
+
         self.tables.sort()
 
         self.serie_tables = [t for t in self.tables if t.lower().startswith("serie_")]
+
+    def _get_connection(self):
+        try:
+            db_connection = connect(
+                host=self._db_host,
+                user=self._db_user,
+                password=self._db_password,
+                port=self._db_port,
+                database=self._db_database
+            )
+
+            return db_connection
+
+        except Error as e:
+            print("Error in _get_connection: " + str(e))
+    def start_process(self):
+        while True:
+            self.connection = self._get_connection()
+            
+            self._check_run_status()
+            if self._status == 1:
+                self.intern_process()
+            else:
+                pass
+            self.connection.close()
+            
+            time.sleep(self._sleep)
+
+    def _check_run_status(self):
+
+        values = self._read_tab1_value(["l1"], ["9POW"])
+        self._status = int(values["9POW"][0])
+
+    #def _read_tab1_int_value(self, columns, id_list):
+    #    values = self._read_tab1_value(columns, id_list)
+    #    return values[0][0]
+    #def _read_tab1_float_value(self, columns, id_list):
+    #    pass
+
+    def _read_tab1_value(self, columns, id_list):
+
+        in_id = "', '".join(id_list)
+        in_id = "'" + in_id + "'"
+        select_sql = f"SELECT id, {', '.join(columns)} FROM {self._get_schema_table('Tab_01')} where id in ({in_id})"
+
+        sql_cursor = self.connection.cursor()
+
+        sql_cursor.execute(select_sql)
+
+        sql_result = sql_cursor.fetchall()
+
+        results = {}
+
+        for sql_row in sql_result:
+            row = [r for r in sql_row]
+            row_id = row[0]
+            row.pop(0)
+            results[row_id] = row
+
+        sql_cursor.close()
+
+        return results
+
+    def _get_schema_table(self, table_name):
+        return f"{self._db_database}.{table_name}"
+
+    @staticmethod
+    def get_proper_float(in_str: str) -> float:
+        if in_str is None or str(in_str).strip() == "":
+            return 0
+        return float(str(in_str).replace(",", "."))
 
 
