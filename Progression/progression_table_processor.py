@@ -15,7 +15,6 @@ class ProgressionTableProcessor:
     _serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
     _tab_4_columns = ["id", "serie", "leverage", "betrag"]
 
-
     def __init__(self):
         self.connection = None
         self.tables = []
