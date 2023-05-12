@@ -185,7 +185,11 @@ class RankingTableProcessor:
         return cutoff_value, liq_value, min_value_dif, min_value_rat
 
     def intern_process(self):
-        self.process_next_data()
+        try:
+            self.process_next_data()
+
+        except:
+            print("Error in intern_process: ")
 
     @staticmethod
     def _get_identity_vale(row: List):
@@ -194,11 +198,9 @@ class RankingTableProcessor:
             id_val += str(val) + ":"
 
         if id_val.endswith(":"):
-            id_val = id_val[:len(id_val)-1]
+            id_val = id_val[:len(id_val) - 1]
 
         return id_val
-
-
 
     def _get_schema_table(self, table_name):
         return f"{self._db_database}.{table_name}"
@@ -262,9 +264,12 @@ class RankingTableProcessor:
             time.sleep(self._sleep)
 
     def _check_run_status(self):
+        try:
+            values = self._read_tab1_value(["l1"], ["9POW"])
+            self._status = int(values["9POW"][0])
 
-        values = self._read_tab1_value(["l1"], ["9POW"])
-        self._status = int(values["9POW"][0])
+        except:
+            print("Error in _check_run_status: ")
 
     def get_tab_2_column_index(self, column):
         return self._tab2_columns.index(column)
@@ -300,9 +305,3 @@ class RankingTableProcessor:
 
         self.connection.commit()
         sql_cursor.close()
-
-
-
-
-
-
