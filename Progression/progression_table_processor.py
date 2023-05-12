@@ -215,12 +215,6 @@ class ProgressionTableProcessor:
         values = self._read_tab1_value(["l1"], ["9POW"])
         self._status = int(values["9POW"][0])
 
-    #def _read_tab1_int_value(self, columns, id_list):
-    #    values = self._read_tab1_value(columns, id_list)
-    #    return values[0][0]
-    #def _read_tab1_float_value(self, columns, id_list):
-    #    pass
-
     def _read_tab1_value(self, columns, id_list):
 
         in_id = "', '".join(id_list)
