@@ -1,4 +1,3 @@
-import logging
 from operator import itemgetter
 from typing import List
 
@@ -27,7 +26,6 @@ class RankingTableProcessor(ProcessBase):
 
     def __init__(self):
         super().__init__()
-        logging.info('Starting Ranking modules.')
 
         self._tab_1 = ConnectionOneProcessor()
         self._tab_2 = TableTwoConnectionProcessor()
@@ -42,12 +40,12 @@ class RankingTableProcessor(ProcessBase):
         self.latest_index = self._tab_2.get_column_index("LATEST")
 
     def process_next_data(self):
-        logging.info("Start processing rankings ...")
+        print("Start processing rankings ...")
 
         cutoff_value, liq_value, min_value_dif, min_value_rat = self.read_base_data()
 
         if liq_value == 0:
-            logging.info("There is 0 value in 6LIQ : L2!")
+            print("There is 0 value in 6LIQ : L2!")
             return
 
         # 1. Schritt
@@ -56,7 +54,7 @@ class RankingTableProcessor(ProcessBase):
         #not_proceed_list = not_proceed_list[:10:1]
 
         if len(not_proceed_list) == 0:
-            logging.info("There is no new data to process in Tab_02")
+            print("There is no new data to process in Tab_02")
             return
 
         # 2. Schritt
@@ -65,7 +63,7 @@ class RankingTableProcessor(ProcessBase):
             not_proceed_list = self.schritt_2(min_value_dif, not_proceed_list)
 
         if len(not_proceed_list) == 0:
-            logging.info("Results of step 2 is empty!")
+            print("Results of step 2 is empty!")
             return
 
         # 3. Schritt
@@ -73,17 +71,15 @@ class RankingTableProcessor(ProcessBase):
         sorted_not_proceed_list = self.schritt_3(not_proceed_list)
 
         if len(sorted_not_proceed_list) == 0:
-            logging.info("Results of step 3 is empty!")
+            print("Results of step 3 is empty!")
             return
-
-        logging.info(f"After Schritt.3 the first row is: {sorted_not_proceed_list[0]}")
 
         # 4. Schritt
 
         sorted_not_proceed_list = self.schritt_4(cutoff_value, sorted_not_proceed_list)
 
         if len(sorted_not_proceed_list) == 0:
-            logging.info("Results of step 4 is empty!")
+            print("Results of step 4 is empty!")
             return
 
         sorted_not_proceed_list = self.schritt_5_6_7(min_value_rat, sorted_not_proceed_list)
@@ -93,19 +89,16 @@ class RankingTableProcessor(ProcessBase):
             # 9. Schritt
             self.schritt_8_9(liq_value, sorted_not_proceed_list)
         else:
-            logging.info("Results of steps 5_6_7 is empty!")
+            print("Results of steps 5_6_7 is empty!")
 
     def schritt_8_9(self, liq_value, sorted_not_proceed_list):
         first_row = sorted_not_proceed_list[0]
-        logging.info(f"first_row is: {first_row}")
         vol1 = first_row[self.vol1_index]
         vol2 = first_row[self.vol2_index]
         latest = first_row[self.latest_index]
         bmax = (vol1 + vol2) * latest / liq_value
         data_to_inset = {"id": first_row[self.id_index], "ls": first_row[self.ls_index], "bmax": bmax}
-        data_to_update = {"ls": first_row[self.ls_index], "bmax": bmax}
-        #self._tab_3.insert_data_duplicate(data_to_inset, data_to_update)
-        logging.info(f"Update tab_3: {data_to_inset}")
+        print(f"Update tab_3: {data_to_inset}")
         self._tab_3.update(data_to_inset)
 
     def schritt_5_6_7(self, min_value_rat, in_sorted_not_proceed_list):
@@ -149,15 +142,6 @@ class RankingTableProcessor(ProcessBase):
         return sorted_not_proceed_list
 
     def schritt_2(self, min_value_dif, not_proceed_list):
-        #logging.info(f"Filtering list in step 2: min_value_dif: {min_value_dif}")
-        #print()
-        #print(not_proceed_list)
-        #print()
-
-        #not_proceed_list = [r for r in not_proceed_list if r[self.move1_index] is not None and r[self.move2_index] is not None]
-        #not_proceed_list = [r for r in not_proceed_list if float(r[self.move1_index]) > 0]
-        # not_proceed_list = [r for r in not_proceed_list if float(r[self.move2_index]) > 0]
-
         not_proceed_list = [r for r in not_proceed_list if
                             float(r[self.move1_index]) - float(r[self.move2_index]) > min_value_dif]
         return not_proceed_list
@@ -177,7 +161,6 @@ class RankingTableProcessor(ProcessBase):
 
         if len(new_id_list) > 0:
             self._last_proceed_rows = new_id_list
-            logging.info(f'There {len(new_id_list)} new data in Tab_02')
 
         for r in range(0, len(not_proceed_list)):
             for c in range(2, len(not_proceed_list[r])):

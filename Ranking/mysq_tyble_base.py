@@ -1,4 +1,3 @@
-import logging
 from typing import List, Dict
 
 from mysq_connection_base import MySQLConnectionBase
@@ -34,12 +33,9 @@ class MySQLTableBase(MySQLConnectionBase):
     def get_connection(self):
         return self._get_connection()
 
-    def read_table_data(self, sort_by: str = None, limit: int = -1):
+    def read_table_data(self):
         select_sql = f"SELECT {', '.join(self._select_columns)} FROM {self._get_schema_table()}"
-        if sort_by:
-            select_sql += f" order by {sort_by}"
-        if limit > 0:
-            select_sql += f" limit {limit}"
+
         return self.read_sql_data(select_sql)
 
     def read_sql_data(self, sql: str) -> List[List]:
@@ -66,7 +62,6 @@ class MySQLTableBase(MySQLConnectionBase):
         return self._select_columns.index(column)
 
     def insert_data(self, data: Dict):
-        logging.debug(f"Insert data into {self._table_name}")
         db_connection = self._get_connection()
 
         insert_data = [data[c] for c in self._insert_columns]
@@ -80,7 +75,6 @@ class MySQLTableBase(MySQLConnectionBase):
         db_connection.close()
 
     def insert_data_duplicate(self, ins_data: Dict, upd_data: Dict):
-        logging.debug(f"Insert or update data into {self._table_name}")
         db_connection = self._get_connection()
 
         insert_data = [ins_data[c] for c in ins_data] + [ins_data[c] for c in upd_data]

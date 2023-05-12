@@ -1,8 +1,6 @@
 import configparser
 import os
 from os.path import dirname
-import logging
-import logging.config
 from datetime import datetime
 
 
@@ -10,11 +8,6 @@ class ConfigurationReader:
     latest_date = datetime.now()
 
     def __init__(self):
-        logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
-                            level=logging.DEBUG,
-                            datefmt='%Y-%m-%d %I:%M:%S')
-
-        self._config_logger()
 
         db_conf_file = os.path.join(dirname(__file__), "config.ini")
         if not os.path.exists(db_conf_file):
@@ -33,12 +26,6 @@ class ConfigurationReader:
 
     def get_sleep(self) -> float:
         return self._sleep / 1000
-
-    def _config_logger(self):
-
-        logger = logging.getLogger()
-
-        logger.setLevel(logging.INFO)
 
 
 CONFIG_READER = ConfigurationReader()
