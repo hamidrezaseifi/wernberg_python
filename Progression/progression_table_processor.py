@@ -16,6 +16,8 @@ class ProgressionTableProcessor:
     _serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
     _tab_4_columns = ["id", "serie", "leverage", "betrag"]
 
+    _last_created_table_name = None
+
     def __init__(self):
         self.connection = None
         self.tables = []
@@ -94,16 +96,19 @@ class ProgressionTableProcessor:
         self.print_log("Start processing Progressions ...")
 
         if not self.find_first_valid_table():
+            if self._last_created_table_name is not None:
+                last_row = self.load_last_row(self._last_created_table_name)
+                if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
+                    self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
+                    return
+
             self._selected_table_name = self.find_new_table_name()
 
             self.create_serie_table(self._selected_table_name)
 
+            self._last_created_table_name = self._selected_table_name
+
         new_id = self.add_new_row()
-
-        #_tab_1 = ConnectionOneProcessor()
-
-        #_tab_1.load_data()
-
         values = self._read_tab1_value([f"l{new_id}"], ["5BTR", "5HEB"])
 
         betrag = self.get_proper_float(values["5BTR"][0])
