@@ -10,7 +10,7 @@ from mysql.connector import Error, pooling
 class ProgressionTableProcessor:
 
     _selected_table_name = ""
-    _last_serie_index: int = 27
+    _last_serie_index: int = 1
     _status: int = 1
 
     _serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
