@@ -2,6 +2,8 @@ import time
 from datetime import datetime
 from typing import List
 
+import mysql
+
 from config_reader import ConfigurationReader
 
 from mysql.connector import Error, pooling
@@ -31,19 +33,24 @@ class ProgressionTableProcessor:
         self._db_database = config.db_database
 
     def load_last_row(self, table_name: str):
+        if table_name not in self.serie_tables:
+            return None
+
         sql = f"SELECT {', '.join(self._serie_columns)} FROM {self._db_database}.{table_name} order by id desc limit 1"
 
         sql_cursor = self.connection.cursor()
-
-        sql_cursor.execute(sql)
-
-        sql_result = sql_cursor.fetchall()
-
         last_row = None
-        for sql_row in sql_result:
-            last_row = [r for r in sql_row]
+        try:
+            sql_cursor.execute(sql)
 
-        sql_cursor.close()
+            sql_result = sql_cursor.fetchall()
+
+            for sql_row in sql_result:
+                last_row = [r for r in sql_row]
+        except mysql.connector.Error as err:
+            self.print_log("Something went wrong: {}".format(err))
+        finally:
+            sql_cursor.close()
 
         return last_row
 
@@ -64,7 +71,8 @@ class ProgressionTableProcessor:
             selected_table_name = self.serie_tables[tab_idx]
 
             last_row = self.load_last_row(selected_table_name)
-
+            if last_row is None:
+                continue
             if self.is_column_not_null("guv", last_row):
                 self._selected_table_name = selected_table_name
                 return True
@@ -85,7 +93,7 @@ class ProgressionTableProcessor:
 
         #TABLE_LOADER.load_tables()
 
-        while new_table_name.lower() in [t.lower() for t in self.serie_tables]:
+        while new_table_name in [t for t in self.serie_tables]:
             self._last_serie_index += 1
             if self._last_serie_index > 999999:
                 self._last_serie_index = 1
@@ -96,8 +104,20 @@ class ProgressionTableProcessor:
         self.print_log("Start processing Progressions ...")
 
         if not self.find_first_valid_table():
+            if self._last_created_table_name is None and len(self.serie_tables) > 0:
+                self._last_created_table_name = self.serie_tables[len(self.serie_tables) - 1]
+                self.print_log(f"Set _last_created_table_name tp '{self._last_created_table_name}'")
+
             if self._last_created_table_name is not None:
                 last_row = self.load_last_row(self._last_created_table_name)
+                if last_row is None:
+                    self.print_log(f"last_row is none")
+                    self.load_tables()
+                    if self._last_created_table_name not in self.serie_tables:
+                        self.print_log(f"'{self._last_created_table_name}' is not in {self.serie_tables}")
+                        self._last_created_table_name = None
+                    return
+
                 if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
                     self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
                     return
@@ -136,6 +156,7 @@ class ProgressionTableProcessor:
 
         new_id = 1
         last_row = self.load_last_row(table_name)
+
         if last_row is not None and len(last_row) > 0:
             last_id = int(last_row[0])
             new_id = last_id + 1
