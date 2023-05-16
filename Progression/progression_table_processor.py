@@ -54,11 +54,12 @@ class ProgressionTableProcessor:
 
         return last_row
 
-    def is_column_not_null(self, column: str, last_row: List) -> bool:
+    def is_full_data_row(self, last_row: List) -> bool:
         if last_row:
-            if column in self._serie_columns:
-                idx = self._serie_columns.index(column)
-                return last_row[idx] is not None
+            null_values = [r for r in last_row if r is None]
+            if len(null_values) > 0:
+                return False
+            return True
 
         return False
 
@@ -73,7 +74,7 @@ class ProgressionTableProcessor:
             last_row = self.load_last_row(selected_table_name)
             if last_row is None:
                 continue
-            if self.is_column_not_null("guv", last_row):
+            if self.is_full_data_row(last_row):
                 self._selected_table_name = selected_table_name
                 return True
 
@@ -93,7 +94,7 @@ class ProgressionTableProcessor:
 
         #TABLE_LOADER.load_tables()
 
-        while new_table_name in [t for t in self.serie_tables]:
+        while new_table_name.lower() in [t.lower() for t in self.serie_tables]:
             self._last_serie_index += 1
             if self._last_serie_index > 999999:
                 self._last_serie_index = 1
@@ -137,6 +138,7 @@ class ProgressionTableProcessor:
         self._update_tab_4(new_id, leverage, betrag, self._selected_table_name)
 
     def _update_tab_4(self, row_id, leverage, betrag, serie):
+        self.print_log(f"Update Tab_04 row_id:{row_id}, leverage:{leverage}, betrag:{betrag}, serie:{serie}")
         sql = f"delete from {self._db_database}.{self._table_4_name}"
 
         insert_cursor = self.connection.cursor()
