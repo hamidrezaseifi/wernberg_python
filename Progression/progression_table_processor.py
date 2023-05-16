@@ -121,6 +121,7 @@ class ProgressionTableProcessor:
 
                 if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
                     self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
+                    self._update_tab_4(last_row[0], self._last_created_table_name)
                     return
 
             self._selected_table_name = self.find_new_table_name()
@@ -130,14 +131,15 @@ class ProgressionTableProcessor:
             self._last_created_table_name = self._selected_table_name
 
         new_id = self.add_new_row()
-        values = self._read_tab1_value([f"l{new_id}"], ["5BTR", "5HEB"])
+
+        self._update_tab_4(new_id, self._selected_table_name)
+
+    def _update_tab_4(self, row_id, serie):
+        values = self._read_tab1_value([f"l{row_id}"], ["5BTR", "5HEB"])
 
         betrag = self.get_proper_float(values["5BTR"][0])
         leverage = self.get_proper_float(values["5HEB"][0])
 
-        self._update_tab_4(new_id, leverage, betrag, self._selected_table_name)
-
-    def _update_tab_4(self, row_id, leverage, betrag, serie):
         self.print_log(f"Update Tab_04 row_id:{row_id}, leverage:{leverage}, betrag:{betrag}, serie:{serie}")
         sql = f"delete from {self._db_database}.{self._table_4_name}"
 
