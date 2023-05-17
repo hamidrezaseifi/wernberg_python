@@ -54,6 +54,32 @@ class ProgressionTableProcessor:
 
         return last_row
 
+    def load_tab4_data(self):
+        sql = f"SELECT id, serie, leverage, betrag FROM {self.db_database}.{self.table_4_name}"
+
+        sql_cursor = self.connection.cursor()
+        last_id = None
+        last_serie = None
+        last_leverage = None
+        last_betrag = None
+        try:
+            sql_cursor.execute(sql)
+
+            sql_result = sql_cursor.fetchall()
+
+            for sql_row in sql_result:
+                last_id = sql_row[0]
+                last_serie = sql_row[1]
+                last_leverage = sql_row[2]
+                last_betrag = sql_row[3]
+
+        except mysql.connector.Error as err:
+            self.print_log("Something went wrong: {}".format(err))
+        finally:
+            sql_cursor.close()
+
+        return last_id, last_serie, last_leverage, last_betrag
+
     @staticmethod
     def is_full_data_row(last_row: List) -> bool:
         if last_row:
@@ -72,9 +98,15 @@ class ProgressionTableProcessor:
 
         return False
 
-    def find_first_writeable_table(self) -> [str, bool]:
+    @staticmethod
+    def is_open_data_row(last_row: List) -> bool:
+        if last_row:
+            if last_row[0] is not None and last_row[1] is not None and last_row[2] is not None and last_row[3] is None and last_row[4] is None:
+                return True
 
-        self.load_tables()
+        return False
+
+    def find_first_writeable_table(self) -> [str, bool]:
 
         full_tables_name = None
         writeable_table = None
@@ -119,6 +151,11 @@ class ProgressionTableProcessor:
 
     def intern_process(self):
         self.print_log("Start processing Progressions ...")
+
+        self.load_tables()
+
+        if self.is_last_created_id_not_used():
+            return
 
         full_tables_name, writeable = self.find_first_writeable_table()
         if full_tables_name is None and not writeable:
@@ -306,5 +343,17 @@ class ProgressionTableProcessor:
         new_id = self.add_new_serire_row(selected_table)
 
         self.update_tab_4(new_id, selected_table)
+
+    def is_last_created_id_not_used(self):
+        last_id, last_serie, last_leverage, last_betrag = self.load_tab4_data()
+        if last_id is None:
+            return False
+
+        last_row = self.load_last_row(last_serie)
+        is_writeable = self.is_writeable_data_row(last_row)
+
+        if is_writeable:
+            self.print_log(f"The last created id:{last_id} in serie: {last_serie} ist not used yet!")
+        return is_writeable
 
 
