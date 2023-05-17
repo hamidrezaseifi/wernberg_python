@@ -11,32 +11,32 @@ from mysql.connector import Error, pooling
 
 class ProgressionTableProcessor:
 
-    _selected_table_name = ""
-    _last_serie_index: int = 1
-    _status: int = 1
+    #_selected_table_name = ""
+    #_last_serie_index: int = 1
+    status: int = 1
 
-    _serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
-    _tab_4_columns = ["id", "serie", "leverage", "betrag"]
+    serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
+    tab_4_columns = ["id", "serie", "leverage", "betrag"]
 
-    _last_created_table_name = None
+    #_last_created_table_name = None
 
     def __init__(self):
         self.connection = None
         self.tables = []
         self.serie_tables = []
-        self._table_4_name = "Tab_04"
+        self.table_4_name = "Tab_04"
 
         config = ConfigurationReader()
-        self._sleep = config.get_sleep()
+        self.sleep = config.get_sleep()
 
         self.connection_pool = self.get_connection_pool(config)
-        self._db_database = config.db_database
+        self.db_database = config.db_database
 
     def load_last_row(self, table_name: str):
         if table_name not in self.serie_tables:
             return None
 
-        sql = f"SELECT {', '.join(self._serie_columns)} FROM {self._db_database}.{table_name} order by id desc limit 1"
+        sql = f"SELECT {', '.join(self.serie_columns)} FROM {self.db_database}.{table_name} order by id desc limit 1"
 
         sql_cursor = self.connection.cursor()
         last_row = None
@@ -54,7 +54,8 @@ class ProgressionTableProcessor:
 
         return last_row
 
-    def is_full_data_row(self, last_row: List) -> bool:
+    @staticmethod
+    def is_full_data_row(last_row: List) -> bool:
         if last_row:
             null_values = [r for r in last_row if r is None]
             if len(null_values) > 0:
@@ -63,90 +64,98 @@ class ProgressionTableProcessor:
 
         return False
 
-    def find_first_valid_table(self) -> bool:
+    @staticmethod
+    def is_writeable_data_row(last_row: List) -> bool:
+        if last_row:
+            if last_row[0] is not None and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
+                return True
+
+        return False
+
+    def find_first_writeable_table(self) -> [str, str, int]:
 
         self.load_tables()
 
-        self._selected_table_name = None
         for tab_idx in range(0, len(self.serie_tables)):
             selected_table_name = self.serie_tables[tab_idx]
 
             last_row = self.load_last_row(selected_table_name)
             if last_row is None:
                 continue
-            if self.is_full_data_row(last_row):
-                self._selected_table_name = selected_table_name
-                return True
+            if ProgressionTableProcessor.is_full_data_row(last_row):
+                return selected_table_name, "full", int(last_row[0])
+            if ProgressionTableProcessor.is_writeable_data_row(last_row):
+                return selected_table_name, "writeable", int(last_row[0])
 
-        return False
-
-    def add_new_row(self) -> [str, int]:
-        if self._selected_table_name is not None:
-
-            new_id = self.add_new_serire_row(self._selected_table_name)
-            return new_id
-
-        return None
+        return "not", "not", 0
 
     def find_new_table_name(self) -> str:
 
-        new_table_name = f"Serie_{self._last_serie_index:06d}"
+        last_id = 0
+        if len(self.serie_tables) > 0:
+            last_serie = self.serie_tables[len(self.serie_tables) - 1]
+            last_serie_id = last_serie[6:]
+            last_id = int(last_serie_id)
+        new_id = last_id + 1
 
-        #TABLE_LOADER.load_tables()
+        new_table_name = self.get_serie_name(new_id)
 
         while new_table_name.lower() in [t.lower() for t in self.serie_tables]:
-            self._last_serie_index += 1
-            if self._last_serie_index > 999999:
-                self._last_serie_index = 1
-            new_table_name = f"Serie_{self._last_serie_index:06d}"
+            new_id += 1
+            if new_id > 999999:
+                new_id = 1
+            new_table_name = self.get_serie_name(new_id)
+        return new_table_name
+
+    def get_serie_name(self, new_id):
+        new_table_name = f"Serie_{new_id:06d}"
         return new_table_name
 
     def intern_process(self):
         self.print_log("Start processing Progressions ...")
 
-        if not self.find_first_valid_table():
-            if self._last_created_table_name is None and len(self.serie_tables) > 0:
-                self._last_created_table_name = self.serie_tables[len(self.serie_tables) - 1]
-                self.print_log(f"Set _last_created_table_name tp '{self._last_created_table_name}'")
+        selected_table, status, last_id = self.find_first_writeable_table()
+        if selected_table == "not":
+            self.create_new_table()
+        else:
+            if status == "full":
+                self.add_new_row(selected_table)
+            if status == "writeable":
+                self.update_tab_4(last_id, selected_table)
 
-            if self._last_created_table_name is not None:
-                last_row = self.load_last_row(self._last_created_table_name)
-                if last_row is None:
-                    self.print_log(f"last_row is none")
-                    self.load_tables()
-                    if self._last_created_table_name not in self.serie_tables:
-                        self.print_log(f"'{self._last_created_table_name}' is not in {self.serie_tables}")
-                        self._last_created_table_name = None
-                    return
+        #if not self.find_first_writeable_table1():
+        #    if self._last_created_table_name is None and len(self.serie_tables) > 0:
+        #        self._last_created_table_name = self.serie_tables[len(self.serie_tables) - 1]
+        #        self.print_log(f"Set _last_created_table_name tp '{self._last_created_table_name}'")
 
-                if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
-                    self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
-                    self._update_tab_4(last_row[0], self._last_created_table_name)
-                    return
+        #    if self._last_created_table_name is not None:
+        #        last_row = self.load_last_row(self._last_created_table_name)
+        #        if last_row is None:
+        #            self.print_log(f"last_row is none")
+        #            self.load_tables()
+        #            if self._last_created_table_name not in self.serie_tables:
+        #                self.print_log(f"'{self._last_created_table_name}' is not in {self.serie_tables}")
+        #                self._last_created_table_name = None
+        #            return
 
-            self._selected_table_name = self.find_new_table_name()
+        #        if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
+        #            self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
+        #            self._update_tab_4(last_row[0], self._last_created_table_name)
+        #            return
 
-            self.create_serie_table(self._selected_table_name)
-
-            self._last_created_table_name = self._selected_table_name
-
-        new_id = self.add_new_row()
-
-        self._update_tab_4(new_id, self._selected_table_name)
-
-    def _update_tab_4(self, row_id, serie):
-        values = self._read_tab1_value([f"l{row_id}"], ["5BTR", "5HEB"])
+    def update_tab_4(self, row_id, serie):
+        values = self.read_tab1_value([f"l{row_id}"], ["5BTR", "5HEB"])
 
         betrag = self.get_proper_float(values["5BTR"][0])
         leverage = self.get_proper_float(values["5HEB"][0])
 
         self.print_log(f"Update Tab_04 row_id:{row_id}, leverage:{leverage}, betrag:{betrag}, serie:{serie}")
-        sql = f"delete from {self._db_database}.{self._table_4_name}"
+        sql = f"delete from {self.db_database}.{self.table_4_name}"
 
         insert_cursor = self.connection.cursor()
         insert_cursor.execute(sql)
 
-        sql = f"INSERT INTO {self._db_database}.{self._table_4_name}  ({', '.join(self._tab_4_columns)}) VALUES (%s, %s, %s, %s) "
+        sql = f"INSERT INTO {self.db_database}.{self.table_4_name}  ({', '.join(self.tab_4_columns)}) VALUES (%s, %s, %s, %s) "
 
         val = (row_id, serie, leverage, betrag)
 
@@ -165,7 +174,7 @@ class ProgressionTableProcessor:
             last_id = int(last_row[0])
             new_id = last_id + 1
 
-        sql = f"INSERT INTO {self._db_database}.{table_name}  ({', '.join(self._serie_columns)}) VALUES (%s, %s, %s, %s, %s)"
+        sql = f"INSERT INTO {self.db_database}.{table_name}  ({', '.join(self.serie_columns)}) VALUES (%s, %s, %s, %s, %s)"
         val = (new_id, None, None, None, None)
 
         insert_cursor = self.connection.cursor()
@@ -180,7 +189,7 @@ class ProgressionTableProcessor:
     def create_serie_table(self, table_name):
         self.print_log(f"Creating new serie table '{table_name}' ...")
 
-        create_sql = f"CREATE TABLE {self._db_database}.{table_name} ( id int(11) PRIMARY KEY, coin varchar(45) DEFAULT NULL, " \
+        create_sql = f"CREATE TABLE {self.db_database}.{table_name} ( id int(11) PRIMARY KEY, coin varchar(45) DEFAULT NULL, " \
                      "einsatz float DEFAULT NULL, `return` float DEFAULT NULL, guv float DEFAULT NULL)"
 
         create_cursor = self.connection.cursor()
@@ -191,7 +200,7 @@ class ProgressionTableProcessor:
         self.connection.commit()
 
     def load_tables(self):
-        sql = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{self._db_database}'"
+        sql = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{self.db_database}'"
 
         sql_cursor = self.connection.cursor()
 
@@ -215,25 +224,25 @@ class ProgressionTableProcessor:
         while True:
             self.connection = self.connection_pool.get_connection()
             
-            self._check_run_status()
-            if self._status == 1:
+            self.check_run_status()
+            if self.status == 1:
                 self.intern_process()
             else:
                 pass
             self.connection.close()
             
-            time.sleep(self._sleep)
+            time.sleep(self.sleep)
 
-    def _check_run_status(self):
+    def check_run_status(self):
 
-        values = self._read_tab1_value(["l1"], ["9POW"])
-        self._status = int(values["9POW"][0])
+        values = self.read_tab1_value(["l1"], ["9POW"])
+        self.status = int(values["9POW"][0])
 
-    def _read_tab1_value(self, columns, id_list):
+    def read_tab1_value(self, columns, id_list):
 
         in_id = "', '".join(id_list)
         in_id = "'" + in_id + "'"
-        select_sql = f"SELECT id, {', '.join(columns)} FROM {self._get_schema_table('Tab_01')} where id in ({in_id})"
+        select_sql = f"SELECT id, {', '.join(columns)} FROM {self.get_schema_table('Tab_01')} where id in ({in_id})"
 
         sql_cursor = self.connection.cursor()
 
@@ -253,8 +262,8 @@ class ProgressionTableProcessor:
 
         return results
 
-    def _get_schema_table(self, table_name):
-        return f"{self._db_database}.{table_name}"
+    def get_schema_table(self, table_name):
+        return f"{self.db_database}.{table_name}"
 
     @staticmethod
     def get_proper_float(in_str: str) -> float:
@@ -279,5 +288,19 @@ class ProgressionTableProcessor:
 
     def print_log(self, msg):
         print(datetime.now().strftime("%Y-%m-%d %I:%M:%S") + ": " + msg)
+
+    def create_new_table(self):
+        new_table_name = self.find_new_table_name()
+
+        self.create_serie_table(new_table_name)
+
+        new_id = self.add_new_serire_row(new_table_name)
+
+        self.update_tab_4(new_id, new_table_name)
+
+    def add_new_row(self, selected_table):
+        new_id = self.add_new_serire_row(selected_table)
+
+        self.update_tab_4(new_id, selected_table)
 
 
