@@ -72,11 +72,11 @@ class ProgressionTableProcessor:
 
         return False
 
-    def find_first_writeable_table(self) -> [str, str, int]:
+    def find_first_writeable_table(self) -> [str, bool]:
 
         self.load_tables()
 
-        full_tables = None
+        full_tables_name = None
         writeable_table = None
 
         for tab_idx in range(0, len(self.serie_tables)):
@@ -86,19 +86,14 @@ class ProgressionTableProcessor:
             if last_row is None:
                 continue
             if ProgressionTableProcessor.is_full_data_row(last_row):
-                if full_tables is None:
-                    full_tables = {"table": selected_table_name, "last_id": int(last_row[0])}
-                #return selected_table_name, "full", int(last_row[0])
+                if full_tables_name is None:
+                    full_tables_name = selected_table_name
+
             if ProgressionTableProcessor.is_writeable_data_row(last_row):
                 if writeable_table is None:
                     writeable_table = {"table": selected_table_name, "last_id": int(last_row[0])}
-                    #return selected_table_name, "writeable", int(last_row[0])
 
-        if full_tables is not None:
-            return full_tables["table"], "full", full_tables["last_id"]
-        if writeable_table is not None:
-            return writeable_table["table"], "writeable", writeable_table["last_id"]
-        return "not", "not", 0
+        return full_tables_name, writeable_table is not None
 
     def find_new_table_name(self) -> str:
 
@@ -125,34 +120,16 @@ class ProgressionTableProcessor:
     def intern_process(self):
         self.print_log("Start processing Progressions ...")
 
-        selected_table, status, last_id = self.find_first_writeable_table()
-        if selected_table == "not":
+        full_tables_name, writeable = self.find_first_writeable_table()
+        if full_tables_name is None and not writeable:
             self.create_new_table()
         else:
-            if status == "full":
-                self.add_new_row(selected_table)
-            if status == "writeable":
-                self.update_tab_4(last_id, selected_table)
-
-        #if not self.find_first_writeable_table1():
-        #    if self._last_created_table_name is None and len(self.serie_tables) > 0:
-        #        self._last_created_table_name = self.serie_tables[len(self.serie_tables) - 1]
-        #        self.print_log(f"Set _last_created_table_name tp '{self._last_created_table_name}'")
-
-        #    if self._last_created_table_name is not None:
-        #        last_row = self.load_last_row(self._last_created_table_name)
-        #        if last_row is None:
-        #            self.print_log(f"last_row is none")
-        #            self.load_tables()
-        #            if self._last_created_table_name not in self.serie_tables:
-        #                self.print_log(f"'{self._last_created_table_name}' is not in {self.serie_tables}")
-        #                self._last_created_table_name = None
-        #            return
-
-        #        if last_row[0] == 1 and last_row[1] is None and last_row[2] is None and last_row[3] is None and last_row[4] is None:
-        #            self.print_log(f"The last created table '{self._last_created_table_name}' ist not changed yet!")
-        #            self._update_tab_4(last_row[0], self._last_created_table_name)
-        #            return
+            if full_tables_name is not None:
+                self.add_new_row(full_tables_name)
+            else:
+                self.print_log("There is write able serie tables ...")
+            #    if status == "writeable":
+            #        self.update_tab_4(last_id, selected_table)
 
     def update_tab_4(self, row_id, serie):
         values = self.read_tab1_value([f"l{row_id}"], ["5BTR", "5HEB"])
@@ -296,6 +273,7 @@ class ProgressionTableProcessor:
             return connection_pool
         except Error as e:
             self.print_log("Error in get_connection_pool: " + str(e))
+            self.load_tables()
 
     def print_log(self, msg):
         print(datetime.now().strftime("%Y-%m-%d %I:%M:%S") + ": " + msg)
