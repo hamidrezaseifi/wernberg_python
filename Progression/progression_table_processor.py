@@ -127,7 +127,7 @@ class ProgressionTableProcessor:
             if full_tables_name is not None:
                 self.add_new_row(full_tables_name)
             else:
-                self.print_log("There is write able serie tables ...")
+                self.print_log("There is write-able serie tables. No action ...")
             #    if status == "writeable":
             #        self.update_tab_4(last_id, selected_table)
 
