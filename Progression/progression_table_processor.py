@@ -18,7 +18,10 @@ class ProgressionTableProcessor:
     serie_columns = ["id", "coin", "einsatz", "`return`", "guv"]
     tab_4_columns = ["id", "serie", "leverage", "betrag"]
 
-    #_last_created_table_name = None
+    config: ConfigurationReader
+    sleep = 0
+    connection_pool = None
+    db_database = None
 
     def __init__(self):
         self.connection = None
@@ -26,11 +29,8 @@ class ProgressionTableProcessor:
         self.serie_tables = []
         self.table_4_name = "Tab_04"
 
-        config = ConfigurationReader()
-        self.sleep = config.get_sleep()
-
-        self.connection_pool = self.get_connection_pool(config)
-        self.db_database = config.db_database
+        self.config = ConfigurationReader()
+        self.set_setting_from_config()
 
     def load_last_row(self, table_name: str):
         if table_name not in self.serie_tables:
@@ -209,6 +209,8 @@ class ProgressionTableProcessor:
         self.serie_tables = [t for t in self.tables if t.lower().startswith("serie_")]
 
     def start_process(self):
+        config_check_counter = 0
+
         while True:
             self.connection = self.connection_pool.get_connection()
             
@@ -218,8 +220,21 @@ class ProgressionTableProcessor:
             else:
                 pass
             self.connection.close()
-            
+
+            config_check_counter += 1
+
+            if config_check_counter >= 5:
+                config_check_counter = 0
+                if self.config.is_config_changed():
+                    self.config.reload_config()
+                    self.set_setting_from_config()
+
             time.sleep(self.sleep)
+
+    def set_setting_from_config(self):
+        self.sleep = self.config.get_sleep()
+        self.connection_pool = self.get_connection_pool(self.config)
+        self.db_database = self.config.db_database
 
     def check_run_status(self):
 

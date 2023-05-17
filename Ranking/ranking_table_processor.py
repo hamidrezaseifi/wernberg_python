@@ -26,6 +26,11 @@ class RankingTableProcessor:
     vol1_index: int = -1
     vol2_index: int = -1
 
+    _sleep = 0
+    connection_pool = None
+    _db_database = None
+    config: ConfigurationReader
+
     def __init__(self):
 
         self.connection = None
@@ -38,12 +43,13 @@ class RankingTableProcessor:
         self.vol2_index = self.get_tab_2_column_index("vol2")
         self.latest_index = self.get_tab_2_column_index("LATEST")
 
-        config = ConfigurationReader()
-        self._sleep = config.get_sleep()
+        self.config = ConfigurationReader()
+        self.set_setting_from_config()
 
-        self.connection_pool = self.get_connection_pool(config)
-
-        self._db_database = config.db_database
+    def set_setting_from_config(self):
+        self._sleep = self.config.get_sleep()
+        self.connection_pool = self.get_connection_pool(self.config)
+        self._db_database = self.config.db_database
 
     def process_next_data(self):
         self.print_log("Start processing rankings ...")
@@ -235,6 +241,8 @@ class RankingTableProcessor:
         return float(str(in_str).replace(",", "."))
 
     def start_process(self):
+        config_check_counter = 0
+
         while True:
             self.connection = self.connection_pool.get_connection()
 
@@ -244,6 +252,14 @@ class RankingTableProcessor:
             else:
                 pass
             self.connection.close()
+
+            config_check_counter += 1
+
+            if config_check_counter >= 5:
+                config_check_counter = 0
+                if self.config.is_config_changed():
+                    self.config.reload_config()
+                    self.set_setting_from_config()
 
             time.sleep(self._sleep)
 
