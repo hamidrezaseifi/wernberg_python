@@ -76,6 +76,9 @@ class ProgressionTableProcessor:
 
         self.load_tables()
 
+        full_tables = None
+        writeable_table = None
+
         for tab_idx in range(0, len(self.serie_tables)):
             selected_table_name = self.serie_tables[tab_idx]
 
@@ -83,10 +86,18 @@ class ProgressionTableProcessor:
             if last_row is None:
                 continue
             if ProgressionTableProcessor.is_full_data_row(last_row):
-                return selected_table_name, "full", int(last_row[0])
+                if full_tables is None:
+                    full_tables = {"table": selected_table_name, "last_id": int(last_row[0])}
+                #return selected_table_name, "full", int(last_row[0])
             if ProgressionTableProcessor.is_writeable_data_row(last_row):
-                return selected_table_name, "writeable", int(last_row[0])
+                if writeable_table is None:
+                    writeable_table = {"table": selected_table_name, "last_id": int(last_row[0])}
+                    #return selected_table_name, "writeable", int(last_row[0])
 
+        if full_tables is not None:
+            return full_tables["table"], "full", full_tables["last_id"]
+        if writeable_table is not None:
+            return writeable_table["table"], "writeable", writeable_table["last_id"]
         return "not", "not", 0
 
     def find_new_table_name(self) -> str:
