@@ -169,7 +169,10 @@ class ProgressionTableProcessor:
             #        self.update_tab_4(last_id, selected_table)
 
     def update_tab_4(self, row_id, serie):
-        values = self.read_tab1_value([f"l{row_id}"], ["5BTR", "5HEB"])
+        tab01_column_index = row_id
+        if tab01_column_index > 20:
+            tab01_column_index = 20
+        values = self.read_tab1_value([f"l{tab01_column_index}"], ["5BTR", "5HEB"])
 
         betrag = self.get_proper_float(values["5BTR"][0])
         leverage = self.get_proper_float(values["5HEB"][0])
